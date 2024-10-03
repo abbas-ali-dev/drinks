@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-// part 'drink_model.g.dart'; // Important for Hive code generation
+part 'drink_model.g.dart'; // Important for Hive code generation
 
 @HiveType(typeId: 0) // Assign a unique type ID to your model
 class Drink {

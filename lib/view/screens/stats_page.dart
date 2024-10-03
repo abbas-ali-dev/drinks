@@ -1,8 +1,11 @@
 import 'package:drinks/data/widgets/circle_items.dart';
 import 'package:drinks/data/widgets/info_container.dart';
+import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
 import 'package:drinks/view/screens/settings_page.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -12,6 +15,71 @@ class StatsPage extends StatefulWidget {
 }
 
 class _StatsPageState extends State<StatsPage> {
+  late final Box<Drink> _drinksBox;
+
+  // Data for calculations
+  int totalDrinks = 0;
+  int totalBeers = 0;
+  int totalLiquor = 0;
+  int totalWine = 0;
+  DateTime? lastDrinkDate;
+  int longestStreak = 0;
+  int longestBreak = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _drinksBox = Hive.box<Drink>('drinksBox');
+    _calculateStats();
+  }
+
+  void _calculateStats() {
+    // Reset values
+    totalDrinks = 0;
+    totalBeers = 0;
+    totalLiquor = 0;
+    totalWine = 0;
+    lastDrinkDate = null;
+    longestStreak = 0;
+    longestBreak = 0;
+
+    // Iterate through drinks and update values
+    final drinks = _drinksBox.values.toList();
+    if (drinks.isNotEmpty) {
+      lastDrinkDate = drinks.last.dateTime;
+
+      for (var drink in drinks) {
+        totalDrinks++;
+
+        if (drink.drinkType == 'beer') {
+          totalBeers++;
+        } else if (drink.drinkType == 'drink') {
+          totalLiquor++;
+        } else if (drink.drinkType == 'wine') {
+          totalWine++;
+        }
+      }
+    }
+
+    // Calculate percentages
+    double beerPercentage =
+        totalDrinks > 0 ? (totalBeers / totalDrinks) * 100 : 0;
+    double liquorPercentage =
+        totalDrinks > 0 ? (totalLiquor / totalDrinks) * 100 : 0;
+    double winePercentage =
+        totalDrinks > 0 ? (totalWine / totalDrinks) * 100 : 0;
+
+    // ... (Implement logic for longestStreak and longestBreak)
+
+    setState(() {}); // Update the UI
+  }
+
+  // @override
+  // void dispose() {
+  //   _drinksBox.clear();
+  //   super.dispose();
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,7 +131,8 @@ class _StatsPageState extends State<StatsPage> {
                     child: CircleItem(
                       color: Colors.white,
                       label: 'Beer',
-                      percentage: '58%',
+                      percentage:
+                          '${totalBeers > 0 ? (totalBeers / totalDrinks * 100).toInt() : 0}%',
                       size: 180,
                       textColor: Colors.black,
                     ),
@@ -75,7 +144,8 @@ class _StatsPageState extends State<StatsPage> {
                     child: CircleItem(
                       color: Colors.grey[400]!,
                       label: 'Liquor',
-                      percentage: '30%',
+                      percentage:
+                          '${totalLiquor > 0 ? (totalLiquor / totalDrinks * 100).toInt() : 0}%',
                       size: 140,
                       textColor: Colors.black,
                     ),
@@ -87,8 +157,9 @@ class _StatsPageState extends State<StatsPage> {
                     child: CircleItem(
                       color: Colors.grey[600]!,
                       label: 'Wine',
-                      percentage: '12%',
-                      size: 80,
+                      percentage:
+                          '${totalWine > 0 ? (totalWine / totalDrinks * 100).toStringAsFixed(0) : 0}%',
+                      size: 90,
                       textColor: Colors.black,
                     ),
                   ),
@@ -100,12 +171,23 @@ class _StatsPageState extends State<StatsPage> {
               spacing: 16,
               runSpacing: 16,
               children: [
-                InfoContainer(label: 'TOTAL DRINKS', value: '75'),
-                InfoContainer(label: 'LAST DRINK', value: '15 days ago'),
-                InfoContainer(label: 'TOTAL BEERS', value: '61'),
-                InfoContainer(label: 'LONGEST STREAK', value: '5 days'),
-                InfoContainer(label: 'TOTAL LIQUOR', value: '35'),
-                InfoContainer(label: 'LONGEST BREAK', value: '30 days'),
+                InfoContainer(
+                    label: 'TOTAL DRINKS', value: totalDrinks.toString()),
+                InfoContainer(
+                  label: 'LAST DRINK',
+                  value: lastDrinkDate != null
+                      ? DateFormat('MMM d, yyyy').format(lastDrinkDate!)
+                      : 'N/A',
+                ),
+                InfoContainer(
+                    label: 'TOTAL BEERS', value: totalBeers.toString()),
+                InfoContainer(
+                    label: 'LONGEST STREAK', value: '$longestStreak days'),
+                InfoContainer(
+                    label: 'TOTAL LIQUOR', value: totalLiquor.toString()),
+                InfoContainer(
+                    label: 'LONGEST BREAK', value: '$longestBreak days'),
+                InfoContainer(label: 'TOTAL WINE', value: totalWine.toString()),
               ],
             ),
           ],

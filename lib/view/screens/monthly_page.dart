@@ -1,7 +1,8 @@
 import 'package:drinks/data/enums/month_names.dart';
+import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class MonthlyPage extends StatefulWidget {
   const MonthlyPage({super.key});
@@ -12,18 +13,27 @@ class MonthlyPage extends StatefulWidget {
 
 class _MonthlyPageState extends State<MonthlyPage> {
   final ScrollController _scrollController = ScrollController();
-  final DateTime _initialDate = DateTime(2023, 12);
-  DateTime _currentDate = DateTime(2023, 12);
+  final DateTime _initialDate = DateTime(2024, 1);
+  DateTime _currentDate = DateTime(2024, 1);
   final double _itemHeight = 450.0;
-  final List<String> drinks = ['🍸', '🍷', '🍺'];
+  final List<String> drinkIcons = ['🍸', '🍷', '🍺'];
+  late final Box<Drink> _drinksBox;
+
+  // Variables to store monthly drink counts
+  int totalDrinksForMonth = 0;
+  int totalBeersForMonth = 0;
+  int totalLiquorForMonth = 0;
+  int totalWineForMonth = 0;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    _drinksBox = Hive.box<Drink>('drinksBox');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.jumpTo(0);
+      _calculateMonthlyDrinkCounts(_currentDate); // Calculate for initial month
     });
   }
 
@@ -37,26 +47,44 @@ class _MonthlyPageState extends State<MonthlyPage> {
     if (newDate != _currentDate) {
       setState(() {
         _currentDate = newDate;
+        _calculateMonthlyDrinkCounts(_currentDate); // Calculate for new month
       });
     }
   }
 
-  List<int> generateRandomDrinks() {
-    Random random = Random();
-    return List<int>.generate(
-        3, (_) => random.nextInt(10) + 1); // 3 random drink counts
+  // Function to check if a date has any drinks
+  bool _hasDrinks(DateTime date) {
+    return _drinksBox.values.any((drink) {
+      return drink.dateTime.year == date.year &&
+          drink.dateTime.month == date.month &&
+          drink.dateTime.day == date.day;
+    });
   }
 
-  List<int> generateRandomSpecialDays(int maxDays) {
-    Random random = Random();
-    int numSpecialDays =
-        random.nextInt(3) + 1; // Random number of special days (1-3)
-    Set<int> specialDays = {};
-    while (specialDays.length < numSpecialDays) {
-      specialDays.add(
-          random.nextInt(maxDays) + 1); // Ensure days are within month range
+  // Function to calculate total drink counts for the DISPLAYED MONTH
+  void _calculateMonthlyDrinkCounts(DateTime monthDate) {
+    totalDrinksForMonth = 0;
+    totalBeersForMonth = 0;
+    totalLiquorForMonth = 0;
+    totalWineForMonth = 0;
+
+    // Iterate through the drinks in the Hive box
+    for (var drink in _drinksBox.values) {
+      // Check if the drink date matches the displayed month and year
+      if (drink.dateTime.year == monthDate.year &&
+          drink.dateTime.month == monthDate.month) {
+        if (drink.drinkType == 'beer') {
+          totalBeersForMonth++;
+        } else if (drink.drinkType == 'drink') {
+          totalLiquorForMonth++;
+        } else if (drink.drinkType == 'wine') {
+          totalWineForMonth++;
+        }
+        totalDrinksForMonth++;
+      }
     }
-    return specialDays.toList();
+
+    // setState(() {}); // Update the UI
   }
 
   @override
@@ -72,10 +100,24 @@ class _MonthlyPageState extends State<MonthlyPage> {
             Navigator.pop(context);
           },
         ),
-        title: Text(
-          '${_currentDate.monthName()}\n    ${_currentDate.year}',
-          style: const TextStyle(
-              color: Colors.white, fontSize: 23, fontWeight: FontWeight.bold),
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _currentDate.monthName(),
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 23,
+                  fontWeight: FontWeight.bold),
+            ),
+            Text(
+              '${_currentDate.year}',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 23,
+                  fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -100,16 +142,14 @@ class _MonthlyPageState extends State<MonthlyPage> {
           itemBuilder: (context, index) {
             DateTime monthDate =
                 DateTime(_initialDate.year, _initialDate.month + index);
-            List<int> drinkCounts = generateRandomDrinks();
-            int totalDrinks = drinkCounts.reduce((a, b) => a + b);
-
             int daysInMonth =
                 DateTime(monthDate.year, monthDate.month + 1, 0).day;
-            List<int> specialDays = generateRandomSpecialDays(daysInMonth);
+
+            // Calculate monthly drink counts for the current monthDate
+            _calculateMonthlyDrinkCounts(monthDate);
 
             return SizedBox(
               height: 390,
-              // height: _itemHeight,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
@@ -170,35 +210,43 @@ class _MonthlyPageState extends State<MonthlyPage> {
                         itemBuilder: (context, dayIndex) {
                           DateTime day = DateTime(
                               monthDate.year, monthDate.month, dayIndex + 1);
+
                           return Center(
                             child: dayIndex < daysInMonth
-                                ? Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      // Check if the day is a special day
-                                      if (specialDays.contains(day.day))
-                                        Container(
-                                          decoration: const BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
+                                ? GestureDetector(
+                                    onTap: () {
+                                      // Handle day tap (e.g., show details)
+                                      print('Tapped on: $day');
+                                    },
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        // Circle indicator for drinks
+                                        if (_hasDrinks(day))
+                                          Container(
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              '${day.day}',
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          )
+                                        else
+                                          Text(
                                             '${day.day}',
                                             style: const TextStyle(
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold),
                                           ),
-                                        )
-                                      else
-                                        Text(
-                                          '${day.day}',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold),
-                                        )
-                                    ],
+                                      ],
+                                    ),
                                   )
                                 : Container(),
                           );
@@ -209,23 +257,30 @@ class _MonthlyPageState extends State<MonthlyPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        for (int i = 0; i < drinkCounts.length; i++)
+                        for (int i = 0; i < drinkIcons.length; i++)
                           Row(
                             children: [
-                              Text(' ${drinkCounts[i]} ',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold)),
-                              Text(drinks[i],
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold)),
+                              Text(
+                                '${i == 0 ? totalLiquorForMonth : i == 1 ? totalWineForMonth : totalBeersForMonth} ', // Display monthly counts
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                drinkIcons[i],
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
                             ],
                           ),
                         const Text(
-                          " = ",
+                          "=  ",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 30,
@@ -240,7 +295,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8.0, vertical: 4.0),
                           child: Text(
-                            '$totalDrinks',
+                            '$totalDrinksForMonth',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 30,

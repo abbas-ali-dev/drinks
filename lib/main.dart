@@ -9,7 +9,7 @@ void main() async {
   await Hive.initFlutter();
 
   // Register the Drink adapter
-  // Hive.registerAdapter(DrinkAdapter());
+  Hive.registerAdapter(DrinkAdapter());
 
   // Open the Hive box (you can name it anything you like)
   await Hive.openBox<Drink>('drinksBox');

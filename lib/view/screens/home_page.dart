@@ -14,8 +14,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List totalDrinks = [
-    {"name": "drink", "image": Image.asset("assets/png/drink.png")},
     {"name": "beer", "image": Image.asset("assets/png/beer.png")},
+    {"name": "drink", "image": Image.asset("assets/png/drink.png")},
     {"name": "wine", "image": Image.asset("assets/png/wine.png")},
   ];
   int? selectedDrinkIndex;
