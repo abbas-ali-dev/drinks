@@ -1,5 +1,6 @@
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/home_page.dart';
+import 'package:easy_splash_screen/easy_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:drinks/models/drink_model.dart';
@@ -27,9 +28,21 @@ class MainApp extends StatelessWidget {
       builder: (context, orientation, deviceType) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Drink',
-          theme: ThemeData.light(),
-          home: const HomePage(),
+          home: EasySplashScreen(
+            logo: Image.asset('assets/png/wine.png'),
+            title: const Text(
+              "Drinks",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: Colors.white,
+            showLoader: true,
+            loadingText: const Text("Loading..."),
+            navigator: const HomePage(),
+            durationInSeconds: 3,
+          ),
         );
       },
     );
