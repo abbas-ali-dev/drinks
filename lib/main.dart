@@ -3,6 +3,7 @@ import 'package:drinks/view/screens/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:drinks/models/drink_model.dart';
+import 'package:sizer/sizer.dart';
 
 void main() async {
   // Initialize Hive
@@ -22,7 +23,15 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-        debugShowCheckedModeBanner: false, home: HomePage());
+    return Sizer(
+      builder: (context, orientation, deviceType) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Drink',
+          theme: ThemeData.light(),
+          home: const HomePage(),
+        );
+      },
+    );
   }
 }

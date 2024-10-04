@@ -33,7 +33,6 @@ class CircleItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 color: textColor,
-                fontWeight: FontWeight.bold,
               ),
             ),
             Text(
@@ -41,7 +40,6 @@ class CircleItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 color: textColor,
-                fontWeight: FontWeight.bold,
               ),
             ),
           ],

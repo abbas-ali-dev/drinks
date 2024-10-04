@@ -1,5 +1,6 @@
 import 'package:drinks/data/enums/month_names.dart';
 import 'package:drinks/models/drink_model.dart';
+import 'package:drinks/view/screens/home_page.dart';
 import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -327,7 +328,15 @@ class _MonthlyPageState extends State<MonthlyPage> {
             ),
             IconButton(
               icon: const Icon(Icons.home, color: Colors.white),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HomePage(),
+                  ),
+                  (route) => false,
+                );
+              },
             ),
             IconButton(
               icon: const Icon(Icons.share, color: Colors.white),

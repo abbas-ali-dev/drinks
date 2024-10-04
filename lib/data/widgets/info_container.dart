@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
 
 class InfoContainer extends StatelessWidget {
   final String label;
@@ -9,8 +10,8 @@ class InfoContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
-      padding: const EdgeInsets.all(12),
+      width: 40.w,
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(8),
@@ -20,16 +21,15 @@ class InfoContainer extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 17.sp,
               color: Colors.grey[800],
-              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 17.sp,
               color: Colors.grey[800],
               fontWeight: FontWeight.bold,
             ),

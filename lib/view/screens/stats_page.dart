@@ -1,11 +1,13 @@
 import 'package:drinks/data/widgets/circle_items.dart';
 import 'package:drinks/data/widgets/info_container.dart';
 import 'package:drinks/models/drink_model.dart';
+import 'package:drinks/view/screens/home_page.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
 import 'package:drinks/view/screens/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+import 'package:sizer/sizer.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -115,82 +117,84 @@ class _StatsPageState extends State<StatsPage> {
         backgroundColor: Colors.grey[800],
       ),
       backgroundColor: Colors.black,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 300,
-              child: Stack(
-                alignment: Alignment.center,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 33.h,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 3.w,
+                      top: 3.h,
+                      child: CircleItem(
+                        color: Colors.white,
+                        label: 'Beer',
+                        percentage:
+                            '${totalBeers > 0 ? (totalBeers / totalDrinks * 100).toInt() : 0}%',
+                        size: 23.h,
+                        textColor: Colors.black,
+                      ),
+                    ),
+                    Positioned(
+                      // right: 7.w,
+                      left: 54.w,
+                      top: 3.h,
+                      child: CircleItem(
+                        color: Colors.grey[400]!,
+                        label: 'Liquor',
+                        percentage:
+                            '${totalLiquor > 0 ? (totalLiquor / totalDrinks * 100).toInt() : 0}%',
+                        size: 18.h,
+                        textColor: Colors.black,
+                      ),
+                    ),
+                    Positioned(
+                      right: 7.w,
+                      left: 30.w,
+                      top: 20.h,
+                      child: CircleItem(
+                        color: Colors.grey[500]!,
+                        label: 'Wine',
+                        percentage:
+                            '${totalWine > 0 ? (totalWine / totalDrinks * 100).toStringAsFixed(0) : 0}%',
+                        size: 10.h,
+                        textColor: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
                 children: [
-                  Positioned(
-                    left: 30,
-                    top: 30,
-                    child: CircleItem(
-                      color: Colors.white,
-                      label: 'Beer',
-                      percentage:
-                          '${totalBeers > 0 ? (totalBeers / totalDrinks * 100).toInt() : 0}%',
-                      size: 180,
-                      textColor: Colors.black,
-                    ),
+                  InfoContainer(
+                      label: 'TOTAL DRINKS', value: totalDrinks.toString()),
+                  InfoContainer(
+                    label: 'LAST DRINK',
+                    value: lastDrinkDate != null
+                        ? DateFormat('MMM d, yyyy').format(lastDrinkDate!)
+                        : 'N/A',
                   ),
-                  Positioned(
-                    right: 0,
-                    left: 160,
-                    top: 40,
-                    child: CircleItem(
-                      color: Colors.grey[400]!,
-                      label: 'Liquor',
-                      percentage:
-                          '${totalLiquor > 0 ? (totalLiquor / totalDrinks * 100).toInt() : 0}%',
-                      size: 140,
-                      textColor: Colors.black,
-                    ),
-                  ),
-                  Positioned(
-                    right: 50,
-                    left: 80,
-                    top: 170,
-                    child: CircleItem(
-                      color: Colors.grey[600]!,
-                      label: 'Wine',
-                      percentage:
-                          '${totalWine > 0 ? (totalWine / totalDrinks * 100).toStringAsFixed(0) : 0}%',
-                      size: 90,
-                      textColor: Colors.black,
-                    ),
-                  ),
+                  InfoContainer(
+                      label: 'TOTAL BEERS', value: totalBeers.toString()),
+                  InfoContainer(
+                      label: 'LONGEST STREAK', value: '$longestStreak days'),
+                  InfoContainer(
+                      label: 'TOTAL LIQUOR', value: totalLiquor.toString()),
+                  InfoContainer(
+                      label: 'LONGEST BREAK', value: '$longestBreak days'),
+                  InfoContainer(
+                      label: 'TOTAL WINE', value: totalWine.toString()),
                 ],
               ),
-            ),
-            const SizedBox(height: 40),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                InfoContainer(
-                    label: 'TOTAL DRINKS', value: totalDrinks.toString()),
-                InfoContainer(
-                  label: 'LAST DRINK',
-                  value: lastDrinkDate != null
-                      ? DateFormat('MMM d, yyyy').format(lastDrinkDate!)
-                      : 'N/A',
-                ),
-                InfoContainer(
-                    label: 'TOTAL BEERS', value: totalBeers.toString()),
-                InfoContainer(
-                    label: 'LONGEST STREAK', value: '$longestStreak days'),
-                InfoContainer(
-                    label: 'TOTAL LIQUOR', value: totalLiquor.toString()),
-                InfoContainer(
-                    label: 'LONGEST BREAK', value: '$longestBreak days'),
-                InfoContainer(label: 'TOTAL WINE', value: totalWine.toString()),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomAppBar(
@@ -204,7 +208,15 @@ class _StatsPageState extends State<StatsPage> {
             ),
             IconButton(
               icon: const Icon(Icons.home, color: Colors.white),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HomePage(),
+                  ),
+                  (route) => false,
+                );
+              },
             ),
             IconButton(
               icon: const Icon(Icons.share, color: Colors.white),

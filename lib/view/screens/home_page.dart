@@ -4,6 +4,7 @@ import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+import 'package:sizer/sizer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -55,13 +56,28 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final screensize = MediaQuery.of(context).size.width / 100 * 30;
+    final screensize = MediaQuery.of(context).size.width / 100 * 25;
     debugPrint("======>Screen Size: $screensize");
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          DateFormat('   EEEE, \nMMM d, yyyy').format(DateTime.now()),
-          style: const TextStyle(fontSize: 20, color: Colors.white),
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              DateFormat('EEEE').format(DateTime.now()),
+              style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold),
+            ),
+            Text(
+              DateFormat('MMM d, yyyy').format(DateTime.now()),
+              style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         leading: const Icon(
           Icons.arrow_back,
@@ -90,7 +106,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Expanded(
               child: Padding(
-                padding: EdgeInsets.only(left: screensize, top: 15),
+                padding: EdgeInsets.only(left: 25.w, top: 1.h),
                 child: ListView.builder(
                   shrinkWrap: true,
                   itemCount: drinks.length,
@@ -121,7 +137,7 @@ class _HomePageState extends State<HomePage> {
               height: 3,
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(10.0),
               child: Text(
                 '${drinks.length} Drinks',
                 style: const TextStyle(
@@ -131,14 +147,14 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(
-              height: 80,
+              height: 10.h,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 shrinkWrap: true,
                 itemCount: totalDrinks.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 35.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
@@ -151,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                             color: selectedDrinkIndex == index
                                 ? Colors.white
                                 : Colors.transparent,
-                            width: 4.0,
+                            width: 0.9.w,
                           ),
                         ),
                         child: totalDrinks[index]["image"],
