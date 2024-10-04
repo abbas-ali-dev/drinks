@@ -11,7 +11,7 @@ class InfoContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 40.w,
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(8),
@@ -23,6 +23,7 @@ class InfoContainer extends StatelessWidget {
             style: TextStyle(
               fontSize: 17.sp,
               color: Colors.grey[800],
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 6),

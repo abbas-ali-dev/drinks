@@ -148,7 +148,7 @@ class _StatsPageState extends State<StatsPage> {
                         label: 'Liquor',
                         percentage:
                             '${totalLiquor > 0 ? (totalLiquor / totalDrinks * 100).toInt() : 0}%',
-                        size: 18.h,
+                        size: 17.h,
                         textColor: Colors.black,
                       ),
                     ),
