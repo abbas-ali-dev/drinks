@@ -2,7 +2,6 @@ import 'package:drinks/data/widgets/circle_items.dart';
 import 'package:drinks/data/widgets/info_container.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/home_page.dart';
-import 'package:drinks/view/screens/monthly_page.dart';
 import 'package:drinks/view/screens/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';

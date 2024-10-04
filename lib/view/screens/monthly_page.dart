@@ -14,8 +14,8 @@ class MonthlyPage extends StatefulWidget {
 
 class _MonthlyPageState extends State<MonthlyPage> {
   final ScrollController _scrollController = ScrollController();
-  final DateTime _initialDate = DateTime(2024, 1);
-  DateTime _currentDate = DateTime(2024, 1);
+  final DateTime _initialDate = DateTime.now();
+  DateTime _currentDate = DateTime.now();
   final double _itemHeight = 450.0;
   final List<String> drinkIcons = ['🍸', '🍷', '🍺'];
   late final Box<Drink> _drinksBox;
@@ -84,8 +84,21 @@ class _MonthlyPageState extends State<MonthlyPage> {
         totalDrinksForMonth++;
       }
     }
+  }
 
-    // setState(() {}); // Update the UI
+  // Function to calculate daily drink counts for a given month
+  Map<int, int> _calculateDailyDrinkCounts(DateTime monthDate) {
+    Map<int, int> dailyCounts = {};
+
+    for (var drink in _drinksBox.values) {
+      if (drink.dateTime.year == monthDate.year &&
+          drink.dateTime.month == monthDate.month) {
+        int day = drink.dateTime.day;
+        dailyCounts[day] = (dailyCounts[day] ?? 0) + 1;
+      }
+    }
+
+    return dailyCounts;
   }
 
   @override
@@ -145,6 +158,10 @@ class _MonthlyPageState extends State<MonthlyPage> {
                 DateTime(_initialDate.year, _initialDate.month + index);
             int daysInMonth =
                 DateTime(monthDate.year, monthDate.month + 1, 0).day;
+
+            // Calculate daily drink counts for the current month
+            Map<int, int> dailyDrinkCounts =
+                _calculateDailyDrinkCounts(monthDate);
 
             // Calculate monthly drink counts for the current monthDate
             _calculateMonthlyDrinkCounts(monthDate);
@@ -211,41 +228,46 @@ class _MonthlyPageState extends State<MonthlyPage> {
                         itemBuilder: (context, dayIndex) {
                           DateTime day = DateTime(
                               monthDate.year, monthDate.month, dayIndex + 1);
+                          int dayDrinkCount = dailyDrinkCounts[day.day] ?? 0;
 
                           return Center(
                             child: dayIndex < daysInMonth
                                 ? GestureDetector(
                                     onTap: () {
-                                      // Handle day tap (e.g., show details)
-                                      print('Tapped on: $day');
+                                      debugPrint('Tapped on: $day');
                                     },
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        // Circle indicator for drinks
-                                        if (_hasDrinks(day))
-                                          Container(
-                                            decoration: const BoxDecoration(
-                                              color: Colors.white,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(
-                                              '${day.day}',
-                                              style: const TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold,
+                                        // Display drink count or circle indicator
+                                        dayDrinkCount > 0
+                                            ? Container(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.white,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Text(
+                                                  '$dayDrinkCount',
+                                                  style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              )
+                                            : Container(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  '${day.day}',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          )
-                                        else
-                                          Text(
-                                            '${day.day}',
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold),
-                                          ),
                                       ],
                                     ),
                                   )

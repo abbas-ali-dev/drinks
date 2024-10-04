@@ -1,6 +1,5 @@
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
-import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
@@ -20,7 +19,34 @@ class _HomePageState extends State<HomePage> {
     {"name": "wine", "image": Image.asset("assets/png/wine.png")},
   ];
   int? selectedDrinkIndex;
-  List<Map<String, dynamic>> drinks = [];
+  final ScrollController _scrollController = ScrollController();
+
+  DateTime _selectedDate = DateTime.now();
+  List<Map<String, dynamic>> _drinksForSelectedDate = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDrinksForDate(_selectedDate);
+  }
+
+  void _loadDrinksForDate(DateTime date) {
+    final box = Hive.box<Drink>('drinksBox');
+    final drinksFromHive = box.values.where((drink) {
+      return drink.dateTime.year == date.year &&
+          drink.dateTime.month == date.month &&
+          drink.dateTime.day == date.day;
+    }).toList();
+
+    setState(() {
+      _drinksForSelectedDate = drinksFromHive.map((drink) {
+        return {
+          'type': drink.drinkType,
+          'time': DateFormat.jm().format(drink.dateTime),
+        };
+      }).toList();
+    });
+  }
 
   void _addDrink() {
     setState(() {
@@ -34,44 +60,56 @@ class _HomePageState extends State<HomePage> {
         final box = Hive.box<Drink>('drinksBox');
         box.add(newDrink);
 
-        // Update the UI list (optional, if you're displaying it)
-        drinks.add({
-          'type': newDrink.drinkType,
-          'time': DateFormat.jm().format(newDrink.dateTime),
+        // Reload drinks for the current date
+        _loadDrinksForDate(_selectedDate);
+
+        // Scroll to the bottom after adding the drink
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOut,
+          );
+        });
+        Future.delayed(const Duration(milliseconds: 50), () {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
         });
       }
     });
   }
 
-  // void _addDrink() {
-  //   setState(() {
-  //     if (selectedDrinkIndex != null) {
-  //       drinks.add({
-  //         'type': totalDrinks[selectedDrinkIndex!]["name"],
-  //         'time': DateFormat.jm().format(DateTime.now()),
-  //       });
-  //     }
-  //   });
-  // }
+  void _goToPreviousDay() {
+    setState(() {
+      _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+      _loadDrinksForDate(_selectedDate);
+    });
+  }
+
+  void _goToNextDay() {
+    if (_selectedDate.isBefore(DateTime.now())) {
+      setState(() {
+        _selectedDate = _selectedDate.add(const Duration(days: 1));
+        _loadDrinksForDate(_selectedDate);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screensize = MediaQuery.of(context).size.width / 100 * 25;
-    debugPrint("======>Screen Size: $screensize");
     return Scaffold(
       appBar: AppBar(
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              DateFormat('EEEE').format(DateTime.now()),
+              DateFormat('EEEE').format(_selectedDate),
               style: const TextStyle(
                   fontSize: 20,
                   color: Colors.white,
                   fontWeight: FontWeight.bold),
             ),
             Text(
-              DateFormat('MMM d, yyyy').format(DateTime.now()),
+              DateFormat('MMM d, yyyy').format(_selectedDate),
               style: const TextStyle(
                   fontSize: 20,
                   color: Colors.white,
@@ -79,21 +117,19 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        leading: const Icon(
-          Icons.arrow_back,
-          color: Colors.white,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: _goToPreviousDay,
         ),
         actions: [
           IconButton(
             color: Colors.white,
             icon: const Icon(Icons.arrow_forward),
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MonthlyPage(),
-                  ));
-            },
+            onPressed:
+                _selectedDate.isBefore(DateTime.now()) ? _goToNextDay : null,
           ),
         ],
         centerTitle: true,
@@ -108,20 +144,23 @@ class _HomePageState extends State<HomePage> {
               child: Padding(
                 padding: EdgeInsets.only(left: 25.w, top: 1.h),
                 child: ListView.builder(
+                  controller: _scrollController,
                   shrinkWrap: true,
-                  itemCount: drinks.length,
+                  itemCount: _drinksForSelectedDate.length,
                   itemBuilder: (context, index) {
                     return Center(
                       child: ListTile(
-                        leading: drinks[index]['type'] == 'drink'
+                        leading: _drinksForSelectedDate[index]['type'] ==
+                                'drink'
                             ? Image.asset("assets/png/drink.png")
-                            : drinks[index]['type'] == 'beer'
+                            : _drinksForSelectedDate[index]['type'] == 'beer'
                                 ? Image.asset("assets/png/beer.png")
-                                : drinks[index]['type'] == 'wine'
+                                : _drinksForSelectedDate[index]['type'] ==
+                                        'wine'
                                     ? Image.asset("assets/png/wine.png")
                                     : const SizedBox.shrink(),
                         title: Text(
-                          drinks[index]['time'],
+                          _drinksForSelectedDate[index]['time'],
                           style: const TextStyle(
                               fontSize: 20, color: Colors.white),
                         ),
@@ -139,7 +178,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: Text(
-                '${drinks.length} Drinks',
+                '${_drinksForSelectedDate.length} Drinks',
                 style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -188,7 +227,13 @@ class _HomePageState extends State<HomePage> {
           children: [
             IconButton(
               icon: const Icon(Icons.menu, color: Colors.white),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MonthlyPage(),
+                    ));
+              },
             ),
             IconButton(
               icon: const Icon(Icons.add, color: Colors.white),
