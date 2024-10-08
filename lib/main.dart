@@ -5,8 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:sizer/sizer.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting(); // Initialize date formatting
+  Intl.defaultLocale = 'en_US'; // Set the default locale to US English
+
   // Initialize Hive
   await Hive.initFlutter();
 
@@ -19,9 +25,14 @@ void main() async {
   runApp(const MainApp());
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return Sizer(

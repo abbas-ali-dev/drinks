@@ -1,5 +1,7 @@
+import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
+import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
@@ -42,7 +44,9 @@ class _HomePageState extends State<HomePage> {
       _drinksForSelectedDate = drinksFromHive.map((drink) {
         return {
           'type': drink.drinkType,
-          'time': DateFormat.jm().format(drink.dateTime),
+          'time': selectedTimeFormatGlobally == '12 Hour'
+              ? DateFormat.jm().format(drink.dateTime.toLocal())
+              : DateFormat('HH:mm').format(drink.dateTime),
         };
       }).toList();
     });
@@ -90,6 +94,16 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _selectedDate = _selectedDate.add(const Duration(days: 1));
         _loadDrinksForDate(_selectedDate);
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (ModalRoute.of(context)?.settings.arguments == true) {
+      setState(() {
+        _loadDrinksForDate(_selectedDate); // Reload drinks with new format
       });
     }
   }
@@ -241,7 +255,13 @@ class _HomePageState extends State<HomePage> {
             ),
             IconButton(
               icon: const Icon(Icons.share, color: Colors.white),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StatsPage(),
+                    ));
+              },
             ),
           ],
         ),

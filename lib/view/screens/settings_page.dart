@@ -1,4 +1,8 @@
+import 'package:drinks/global/global_variable.dart';
+import 'package:drinks/view/screens/home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:drinks/models/bottom_nav_bar.dart';
+import 'package:sizer/sizer.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -8,21 +12,26 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final List<String> _timeFormats = ['12 Hour', '24 Hour'];
+  final List<String> _cutoffTimes = [
+    '6:00 AM',
+    '6:30 AM',
+    '7:00 AM',
+    '7:30 AM',
+    '8:00 AM',
+    '8:30 AM',
+    '9:00 AM',
+    '9:30 AM',
+    '10:00 AM',
+    '10:30 AM',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        // leading: IconButton(
-        //   color: Colors.white,
-        //   icon: const Icon(
-        //     Icons.arrow_back,
-        //   ),
-        //   onPressed: () {
-        //     Navigator.pop(context);
-        //   },
-        // ),
         centerTitle: true,
         title: const Text(
           'Settings',
@@ -36,7 +45,6 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Preferences Section
             const Text(
               'Preferences',
               style: TextStyle(
@@ -45,13 +53,113 @@ class _SettingsPageState extends State<SettingsPage> {
                   color: Colors.white),
             ),
             const SizedBox(height: 20),
-            _buildPreferenceRow('Time Format',
-                'Toggle between 12 hour and 24 hour time format', '12 Hour'),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Time Format',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    SizedBox(height: 8),
+                    SizedBox(
+                        width: 200,
+                        child: Text(
+                            'Toggle between 12 hour and 24 hour time format',
+                            style: TextStyle(color: Colors.white))),
+                  ],
+                ),
+                SizedBox(
+                  width: 20.w,
+                  child: DropdownButton<String>(
+                    value: selectedTimeFormatGlobally,
+                    dropdownColor: Colors.grey[800],
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                    underline: Container(
+                      height: 2,
+                      color: Colors.white,
+                    ),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedTimeFormatGlobally = newValue!;
+                      });
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomePage(),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                    items: _timeFormats.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 20),
-            _buildPreferenceRow(
-                'Cutoff Time',
-                'Choose the time when drinks are considered the following day',
-                '6:00 AM'),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Cutoff Time',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    SizedBox(height: 8),
+                    SizedBox(
+                        width: 200,
+                        child: Text(
+                            'Choose the time when drinks are considered the following day',
+                            style: TextStyle(color: Colors.white))),
+                  ],
+                ),
+                SizedBox(
+                  width: 20.w,
+                  child: DropdownButton<String>(
+                    value: selectedCutoffTimeGlobally,
+                    dropdownColor: Colors.grey[800],
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                    underline: Container(
+                      height: 2,
+                      color: Colors.white,
+                    ),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedCutoffTimeGlobally = newValue!;
+                      });
+                      print(
+                          'Selected cutoff time: $selectedCutoffTimeGlobally');
+                    },
+                    items: _cutoffTimes.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
 
             const SizedBox(height: 40),
             const Text(
@@ -102,65 +210,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.grey[800],
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.calendar_month, color: Colors.white),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: const Icon(Icons.home, color: Colors.white),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: const Icon(Icons.bar_chart_sharp, color: Colors.white),
-              onPressed: () {},
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPreferenceRow(String title, String subtitle, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-                width: 200,
-                child: Text(subtitle,
-                    style: const TextStyle(color: Colors.white))),
-          ],
-        ),
-        Column(
-          children: [
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold)),
-            Container(
-              height: 1,
-              width: 80,
-              color: Colors.white,
-            ),
-          ],
-        ),
-      ],
+      bottomNavigationBar: const CustomBottumNavigationBar(),
     );
   }
 }
