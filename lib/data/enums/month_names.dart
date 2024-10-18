@@ -13,6 +13,6 @@ extension DateTimeExtension on DateTime {
       'October',
       'November',
       'December'
-    ][this.month - 1];
+    ][month - 1];
   }
 }

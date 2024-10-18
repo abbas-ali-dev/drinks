@@ -2,7 +2,6 @@ import 'package:drinks/data/enums/month_names.dart';
 import 'package:drinks/models/bottom_nav_bar.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/home_page.dart';
-import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -14,12 +13,10 @@ class MonthlyPage extends StatefulWidget {
 }
 
 class _MonthlyPageState extends State<MonthlyPage> {
-  // No need for ScrollController anymore
   DateTime _currentDate = DateTime.now();
   final List<String> drinkIcons = ['🍸', '🍷', '🍺'];
   late final Box<Drink> _drinksBox;
 
-  // Variables to store monthly drink counts
   int totalDrinksForMonth = 0;
   int totalBeersForMonth = 0;
   int totalLiquorForMonth = 0;
@@ -29,10 +26,9 @@ class _MonthlyPageState extends State<MonthlyPage> {
   void initState() {
     super.initState();
     _drinksBox = Hive.box<Drink>('drinksBox');
-    _calculateMonthlyDrinkCounts(_currentDate); // Calculate for initial month
+    _calculateMonthlyDrinkCounts(_currentDate);
   }
 
-  // Function to check if a date has any drinks
   bool _hasDrinks(DateTime date) {
     return _drinksBox.values.any((drink) {
       return drink.dateTime.year == date.year &&
@@ -41,16 +37,13 @@ class _MonthlyPageState extends State<MonthlyPage> {
     });
   }
 
-  // Function to calculate total drink counts for the DISPLAYED MONTH
   void _calculateMonthlyDrinkCounts(DateTime monthDate) {
     totalDrinksForMonth = 0;
     totalBeersForMonth = 0;
     totalLiquorForMonth = 0;
     totalWineForMonth = 0;
 
-    // Iterate through the drinks in the Hive box
     for (var drink in _drinksBox.values) {
-      // Check if the drink date matches the displayed month and year
       if (drink.dateTime.year == monthDate.year &&
           drink.dateTime.month == monthDate.month) {
         if (drink.drinkType == 'beer') {
@@ -65,7 +58,6 @@ class _MonthlyPageState extends State<MonthlyPage> {
     }
   }
 
-  // Function to calculate daily drink counts for a given month
   Map<int, int> _calculateDailyDrinkCounts(DateTime monthDate) {
     Map<int, int> dailyCounts = {};
 
@@ -144,12 +136,15 @@ class _MonthlyPageState extends State<MonthlyPage> {
     );
   }
 
-  // Function to build the UI for a single month
   Widget _buildMonthView(DateTime monthDate) {
     int daysInMonth = DateTime(monthDate.year, monthDate.month + 1, 0).day;
 
     // Calculate daily drink counts for the current month
     Map<int, int> dailyDrinkCounts = _calculateDailyDrinkCounts(monthDate);
+
+    // Calculate the offset for the first day of the month
+    int firstDayWeekday = DateTime(monthDate.year, monthDate.month, 1).weekday;
+    int offset = firstDayWeekday - 0; // Adjust for 0-based indexing
 
     return SizedBox(
       height: MediaQuery.of(context).size.height,
@@ -204,51 +199,64 @@ class _MonthlyPageState extends State<MonthlyPage> {
                   childAspectRatio: 1.7,
                 ),
                 itemBuilder: (context, dayIndex) {
-                  DateTime day =
-                      DateTime(monthDate.year, monthDate.month, dayIndex + 1);
+                  // Apply the offset to align days correctly
+                  int adjustedDayIndex = dayIndex + 1 - offset;
+
+                  DateTime day = DateTime(
+                      monthDate.year, monthDate.month, adjustedDayIndex);
                   int dayDrinkCount = dailyDrinkCounts[day.day] ?? 0;
 
                   return Center(
-                    child: dayIndex < daysInMonth
-                        ? GestureDetector(
-                            onTap: () {
-                              debugPrint('Tapped on: $day');
-                            },
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // Display drink count or circle indicator
-                                dayDrinkCount > 0
-                                    ? Container(
-                                        padding: const EdgeInsets.all(8.0),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          '$dayDrinkCount',
-                                          style: const TextStyle(
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      )
-                                    : Container(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          '${day.day}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                    child:
+                        adjustedDayIndex >= 1 && adjustedDayIndex <= daysInMonth
+                            ? GestureDetector(
+                                onTap: () {
+                                  debugPrint('Tapped on: $day');
+                                  // Navigate to home page with selected date
+                                  // Navigator.push(
+                                  //   context,
+                                  //   MaterialPageRoute(
+                                  //     builder: (context) => const HomePage(),
+                                  //     settings: RouteSettings(
+                                  //       arguments: day, // Pass the selected date
+                                  //     ),
+                                  //   ),
+                                  // );
+                                },
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    dayDrinkCount > 0
+                                        ? Container(
+                                            padding: const EdgeInsets.all(8.0),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Text(
+                                              '$dayDrinkCount',
+                                              style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          )
+                                        : Container(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              '${day.day}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                              ],
-                            ),
-                          )
-                        : Container(),
+                                  ],
+                                ),
+                              )
+                            : Container(),
                   );
                 },
-                itemCount: 42, // 6 weeks x 7 days per week
+                itemCount: 42,
               ),
             ),
             Row(
@@ -258,7 +266,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
                   Row(
                     children: [
                       Text(
-                        '${i == 0 ? totalLiquorForMonth : i == 1 ? totalWineForMonth : totalBeersForMonth} ', // Display monthly counts
+                        '${i == 0 ? totalLiquorForMonth : i == 1 ? totalWineForMonth : totalBeersForMonth} ',
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 30,
