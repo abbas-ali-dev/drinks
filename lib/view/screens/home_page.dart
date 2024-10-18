@@ -26,6 +26,9 @@ class _HomePageState extends State<HomePage> {
   DateTime _selectedDate = DateTime.now();
   List<Map<String, dynamic>> _drinksForSelectedDate = [];
 
+  // Add a variable to control the visibility of the drink selection area
+  bool _showDrinkSelection = false;
+
   @override
   void initState() {
     super.initState();
@@ -78,6 +81,9 @@ class _HomePageState extends State<HomePage> {
         Future.delayed(const Duration(milliseconds: 50), () {
           _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
         });
+
+        // Hide the drink selection area after adding a drink
+        _showDrinkSelection = false;
       }
     });
   }
@@ -142,8 +148,10 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             color: Colors.white,
             icon: const Icon(Icons.arrow_forward),
-            onPressed:
-                _selectedDate.isBefore(DateTime.now()) ? _goToNextDay : null,
+            onPressed: _selectedDate.isBefore(DateTime(DateTime.now().year,
+                    DateTime.now().month, DateTime.now().day))
+                ? _goToNextDay
+                : null,
           ),
         ],
         centerTitle: true,
@@ -178,6 +186,18 @@ class _HomePageState extends State<HomePage> {
                           style: const TextStyle(
                               fontSize: 20, color: Colors.white),
                         ),
+
+                        //   x delete button for delete any drink after add
+
+                        // trailing: IconButton(
+                        //   icon: const Icon(
+                        //     Icons.close,
+                        //     color: Colors.white,
+                        //   ),
+                        //   onPressed: () {
+                        //     _deleteDrink(index);
+                        //   },
+                        // ),
                       ),
                     );
                   },
@@ -199,36 +219,45 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.white),
               ),
             ),
-            SizedBox(
-              height: 10.h,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                itemCount: totalDrinks.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedDrinkIndex = index;
-                        });
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: selectedDrinkIndex == index
-                                ? Colors.white
-                                : Colors.transparent,
-                            width: 0.9.w,
-                          ),
-                        ),
-                        child: totalDrinks[index]["image"],
+            // Modified section to show/hide drink selection
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300), // Animation speed
+              child: _showDrinkSelection
+                  ? SizedBox(
+                      height: 10.h,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        shrinkWrap: true,
+                        itemCount: totalDrinks.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10.0),
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedDrinkIndex = index;
+                                  _addDrink(); // Add the drink on tap
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: selectedDrinkIndex == index
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                    width: 0.9.w,
+                                  ),
+                                ),
+                                child: totalDrinks[index]["image"],
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  );
-                },
-              ),
+                    )
+                  : const SizedBox
+                      .shrink(), // Hide when _showDrinkSelection is false
             ),
           ],
         ),
@@ -251,7 +280,12 @@ class _HomePageState extends State<HomePage> {
             ),
             IconButton(
               icon: const Icon(Icons.add, color: Colors.white),
-              onPressed: _addDrink,
+              onPressed: () {
+                setState(() {
+                  _showDrinkSelection =
+                      !_showDrinkSelection; // Toggle visibility on each press
+                });
+              },
             ),
             IconButton(
               icon: const Icon(Icons.share, color: Colors.white),
@@ -267,5 +301,14 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  void _deleteDrink(int index) {
+    // Delete from Hive box
+    final box = Hive.box<Drink>('drinksBox');
+    box.deleteAt(index);
+
+    // Reload drinks for the current date
+    _loadDrinksForDate(_selectedDate);
   }
 }

@@ -24,7 +24,7 @@ void main() async {
   // Open the Hive box (you can name it anything you like)
   await Hive.openBox<Drink>('drinksBox');
 
-  // Initialize Branch
+  // Initialize Branch.io
   FlutterBranchSdk.initSession().listen((deepLinkData) {
     print('Deep link data: $deepLinkData');
   });
