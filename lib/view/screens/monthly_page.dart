@@ -1,5 +1,5 @@
 import 'package:drinks/data/enums/month_names.dart';
-import 'package:drinks/models/bottom_nav_bar.dart';
+import 'package:drinks/data/widgets/bottom_nav_bar.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';

@@ -1,7 +1,7 @@
 import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/view/screens/home_page.dart';
 import 'package:flutter/material.dart';
-import 'package:drinks/models/bottom_nav_bar.dart';
+import 'package:drinks/data/widgets/bottom_nav_bar.dart';
 import 'package:sizer/sizer.dart';
 
 class SettingsPage extends StatefulWidget {

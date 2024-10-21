@@ -5,7 +5,7 @@ part 'drink_model.g.dart'; // Important for Hive code generation
 @HiveType(typeId: 0) // Assign a unique type ID to your model
 class Drink {
   @HiveField(0)
-  final DateTime dateTime;
+  late DateTime dateTime;
 
   @HiveField(1)
   final String drinkType;

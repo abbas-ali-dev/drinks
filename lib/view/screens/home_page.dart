@@ -1,3 +1,5 @@
+import 'package:drinks/data/widgets/analogClockDialog.dart';
+import 'package:drinks/data/widgets/drink_selection_dialog.dart';
 import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
@@ -50,6 +52,7 @@ class _HomePageState extends State<HomePage> {
           'time': selectedTimeFormatGlobally == '12 Hour'
               ? DateFormat.jm().format(drink.dateTime.toLocal())
               : DateFormat('HH:mm').format(drink.dateTime),
+          'dateTime': drink.dateTime, // Add dateTime to the map
         };
       }).toList();
     });
@@ -114,6 +117,67 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _showDrinkChangeDialog(int index) async {
+    final currentDrink = _drinksForSelectedDate[index];
+
+    await showDialog(
+      context: context,
+      builder: (context) => DrinkSelectionDialog(
+        currentDrink: Drink(
+            dateTime: currentDrink['dateTime'],
+            drinkType: currentDrink['type']),
+        onDrinkSelected: (newDrink) {
+          // Update the drink in Hive
+          final box = Hive.box<Drink>('drinksBox');
+          box.putAt(index, newDrink);
+
+          // Update the UI
+          _loadDrinksForDate(_selectedDate);
+        },
+        onDeleteDrink: () {
+          // Provide the onDeleteDrink callback
+          // Delete the drink from Hive
+          final box = Hive.box<Drink>('drinksBox');
+          box.deleteAt(index);
+
+          // Update the UI
+          _loadDrinksForDate(_selectedDate);
+
+          // Close the dialog
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  Future<void> _showTimePicker(int index) async {
+    final TimeOfDay? pickedTime = await showDialog<TimeOfDay>(
+      context: context,
+      builder: (BuildContext context) {
+        DateTime? dateTime = _drinksForSelectedDate[index]['dateTime'];
+
+        return AnalogClockDialog(
+          initialTime: dateTime ?? DateTime.now(),
+          onTimeSelected: (DateTime newTime) {
+            // Update the drink time in Hive
+            final box = Hive.box<Drink>('drinksBox');
+            final oldDrink = box.getAt(index);
+            if (oldDrink != null) {
+              final newDrink = Drink(
+                dateTime: newTime,
+                drinkType: oldDrink.drinkType,
+              );
+              box.putAt(index, newDrink); // Replace the old drink
+            }
+            // Update the UI
+            _loadDrinksForDate(_selectedDate);
+            Navigator.of(context).pop(); // Close the dialog
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,19 +236,25 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     return Center(
                       child: ListTile(
-                        leading: _drinksForSelectedDate[index]['type'] ==
-                                'drink'
-                            ? Image.asset("assets/png/drink.png")
-                            : _drinksForSelectedDate[index]['type'] == 'beer'
-                                ? Image.asset("assets/png/beer.png")
-                                : _drinksForSelectedDate[index]['type'] ==
-                                        'wine'
-                                    ? Image.asset("assets/png/wine.png")
-                                    : const SizedBox.shrink(),
-                        title: Text(
-                          _drinksForSelectedDate[index]['time'],
-                          style: const TextStyle(
-                              fontSize: 20, color: Colors.white),
+                        leading: GestureDetector(
+                          onTap: () => _showDrinkChangeDialog(index),
+                          child: _drinksForSelectedDate[index]['type'] ==
+                                  'drink'
+                              ? Image.asset("assets/png/drink.png")
+                              : _drinksForSelectedDate[index]['type'] == 'beer'
+                                  ? Image.asset("assets/png/beer.png")
+                                  : _drinksForSelectedDate[index]['type'] ==
+                                          'wine'
+                                      ? Image.asset("assets/png/wine.png")
+                                      : const SizedBox.shrink(),
+                        ),
+                        title: GestureDetector(
+                          onTap: () => _showTimePicker(index),
+                          child: Text(
+                            _drinksForSelectedDate[index]['time'],
+                            style: const TextStyle(
+                                fontSize: 20, color: Colors.white),
+                          ),
                         ),
 
                         //   x delete button for delete any drink after add
