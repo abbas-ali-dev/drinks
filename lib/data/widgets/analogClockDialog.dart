@@ -51,12 +51,12 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
         width: 80.w,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildHourScroller(),
             const Text(' : ',
                 style: TextStyle(fontSize: 30, color: Colors.white)),
             _buildMinuteScroller(),
-            const SizedBox(width: 10),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -84,7 +84,7 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
                     ),
                     child: const Text(
                       'Toggle AM/PM',
-                      style: TextStyle(fontSize: 14, color: Colors.white),
+                      style: TextStyle(fontSize: 12, color: Colors.white),
                     ),
                   ),
                 ),
