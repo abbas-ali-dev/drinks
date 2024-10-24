@@ -3,30 +3,28 @@
   <uses-permission android:name="android.permission.INTERNET"/>
 
     <queries>
-    <!-- If your app checks for SMS support -->
+  
     <intent>
       <action android:name="android.intent.action.VIEW" />
       <data android:scheme="sms" />
     </intent>
-    <!-- If your app checks for call support -->
+ 
     <intent>
       <action android:name="android.intent.action.VIEW" />
       <data android:scheme="tel" />
     </intent>
-    <!-- If your application checks for inAppBrowserView launch mode support -->
+ 
     <intent>
       <action android:name="android.support.customtabs.action.CustomTabsService" />
     </intent>
-    <!--#enddocregion android-queries-->
-    <!-- The "https" scheme is only required for integration tests of this package.
-         It shouldn't be needed in most actual apps, or show up in the README! -->
+
     <intent>
       <action android:name="android.intent.action.VIEW" />
       <data android:scheme="https" />
     </intent>
-    <!--#docregion android-queries-->
+
   </queries>
-  <!--#enddocregion android-queries-->
+
 
     <application
         android:label="Drinks"
@@ -69,7 +67,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
-                      android:host="fccvj.test-app.link" /> <!-- Replace with your Branch link domain -->
+                      android:host="xfnef.app.link" /> <!-- Replace with your Branch link domain -->
             </intent-filter>
 
             <intent-filter>
@@ -77,7 +75,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
-                      android:host="fccvj-alternate.test-app.link" /> <!-- Replace with your secondary Branch link domain, if any -->
+                      android:host="xfnef-alternate.app.link" /> <!-- Replace with your secondary Branch link domain, if any -->
             </intent-filter>
 
         </activity>
