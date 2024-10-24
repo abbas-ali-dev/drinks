@@ -28,7 +28,6 @@ class _HomePageState extends State<HomePage> {
   DateTime _selectedDate = DateTime.now();
   List<Map<String, dynamic>> _drinksForSelectedDate = [];
 
-  // Add a variable to control the visibility of the drink selection area
   bool _showDrinkSelection = false;
 
   @override

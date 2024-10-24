@@ -4,7 +4,6 @@ import 'package:drinks/view/screens/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:drinks/data/widgets/bottom_nav_bar.dart';
 import 'package:hive/hive.dart';
-// import 'package:open_mail_app/open_mail_app.dart';
 import 'package:sizer/sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -148,7 +147,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       setState(() {
                         selectedCutoffTimeGlobally = newValue!;
                       });
-                      print(
+                      debugPrint(
                           'Selected cutoff time: $selectedCutoffTimeGlobally');
                     },
                     items: _cutoffTimes.map((String value) {
@@ -174,18 +173,23 @@ class _SettingsPageState extends State<SettingsPage> {
               onTap: () {
                 _launchEmail();
               },
-              child: const Text(
-                'Feedback',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Feedback',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Please send any feedback to halfpriceappz@gmail.com',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Please send any feedback to halfpriceappz@gmail.com',
-              style: TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 20),
             GestureDetector(
@@ -211,8 +215,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Version Section
             const Text(
               'Version',
               style: TextStyle(
@@ -246,7 +248,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     if (await canLaunchUrl(gmailInboxUri)) {
-      await launchUrl(gmailInboxUri);
+      await launchUrl(emailLaunchUri);
       return;
     }
 
