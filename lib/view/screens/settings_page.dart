@@ -1,8 +1,12 @@
 import 'package:drinks/global/global_variable.dart';
+import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:drinks/data/widgets/bottom_nav_bar.dart';
+import 'package:hive/hive.dart';
+// import 'package:open_mail_app/open_mail_app.dart';
 import 'package:sizer/sizer.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -53,7 +57,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   color: Colors.white),
             ),
             const SizedBox(height: 20),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -108,9 +111,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
-
             const SizedBox(height: 20),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -160,7 +161,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
-
             const SizedBox(height: 40),
             const Text(
               'Other',
@@ -170,12 +170,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   color: Colors.white),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Feedback',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+            GestureDetector(
+              onTap: () {
+                _launchEmail();
+              },
+              child: const Text(
+                'Feedback',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -183,17 +188,27 @@ class _SettingsPageState extends State<SettingsPage> {
               style: TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Clear All Data',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Clear all stored drinks (cannot be undone)',
-              style: TextStyle(color: Colors.white),
+            GestureDetector(
+              onTap: () {
+                _showClearDataConfirmationDialog(context);
+              },
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Clear All Data',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Clear all stored drinks',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
 
@@ -211,6 +226,101 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
       bottomNavigationBar: const CustomBottumNavigationBar(),
+    );
+  }
+
+  Future<void> _launchEmail() async {
+    final Uri gmailInboxUri = Uri.parse(
+        'https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox?Subject=Feedback');
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'halfpriceappz@gmail.com',
+      queryParameters: {
+        'subject': 'Feedback_for_Drink_App',
+      },
+    );
+
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+      return;
+    }
+
+    if (await canLaunchUrl(gmailInboxUri)) {
+      await launchUrl(gmailInboxUri);
+      return;
+    }
+
+    showDialog(
+      // ignore: use_build_context_synchronously
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Feedback'),
+        content: const Text(
+            'Could not open Gmail or your mail app. Please send your feedback to:\nhalfpriceappz@gmail.com'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showClearDataConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[800],
+          title: const Text(
+            'Clear All Data?',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                  'Are you sure you want to clear all data?\n',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text(
+                'Clear Data',
+                style: TextStyle(color: Colors.red),
+              ),
+              onPressed: () {
+                // Clear Hive box
+                Hive.box<Drink>('drinksBox').clear();
+
+                // Show a snackbar to confirm data clearance
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All the data has been cleared.',
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                );
+
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -25,8 +25,13 @@ class _StatsPageState extends State<StatsPage> {
   int totalLiquor = 0;
   int totalWine = 0;
   DateTime? lastDrinkDate;
+  DateTime? firstDrinkDate;
   int longestStreak = 0;
   int longestBreak = 0;
+  int totalDrinkDays = 0;
+  int totalNonDrinkDays = 0;
+  DateTime? earliestDrinkTime;
+  DateTime? latestDrinkTime;
 
   @override
   void initState() {
@@ -42,13 +47,27 @@ class _StatsPageState extends State<StatsPage> {
     totalLiquor = 0;
     totalWine = 0;
     lastDrinkDate = null;
+    firstDrinkDate = null;
     longestStreak = 0;
     longestBreak = 0;
+    totalDrinkDays = 0;
+    totalNonDrinkDays = 0;
+    earliestDrinkTime = null;
+    latestDrinkTime = null;
+
+    int currentStreak = 0;
+    int currentBreak = 0;
+    DateTime? previousDate;
 
     // Iterate through drinks and update values
     final drinks = _drinksBox.values.toList();
+    drinks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
     if (drinks.isNotEmpty) {
+      firstDrinkDate = drinks.first.dateTime;
       lastDrinkDate = drinks.last.dateTime;
+      earliestDrinkTime = drinks.first.dateTime;
+      latestDrinkTime = drinks.last.dateTime;
 
       for (var drink in drinks) {
         totalDrinks++;
@@ -60,9 +79,55 @@ class _StatsPageState extends State<StatsPage> {
         } else if (drink.drinkType == 'wine') {
           totalWine++;
         }
+
+        // Streak and Break Calculations
+        if (previousDate != null) {
+          Duration difference = drink.dateTime.difference(previousDate);
+          if (difference.inDays <= 1) {
+            // Consider it a streak
+            currentStreak++;
+            currentBreak = 0;
+          } else {
+            // It's a break
+            currentBreak = difference.inDays;
+            currentStreak = 0;
+          }
+
+          // Update longestStreak and longestBreak if needed
+          if (currentStreak > longestStreak) {
+            longestStreak = currentStreak;
+          }
+          if (currentBreak > longestBreak) {
+            longestBreak = currentBreak;
+          }
+        }
+
+        // Update earliestDrinkTime and latestDrinkTime
+        if (drink.dateTime.isBefore(earliestDrinkTime!)) {
+          earliestDrinkTime = drink.dateTime;
+        }
+        if (drink.dateTime.isAfter(latestDrinkTime!)) {
+          latestDrinkTime = drink.dateTime;
+        }
+
+        previousDate = drink.dateTime;
       }
+
+      // Calculate total drink days and non-drink days
+      totalDrinkDays =
+          drinks.map((drink) => drink.dateTime.toLocal().day).toSet().length;
+      totalNonDrinkDays =
+          DateTimeRange(start: firstDrinkDate!, end: lastDrinkDate!)
+                  .duration
+                  .inDays -
+              totalDrinkDays;
     }
 
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Calculate percentages
     double beerPercentage =
         totalDrinks > 0 ? (totalBeers / totalDrinks) * 100 : 0;
@@ -71,19 +136,6 @@ class _StatsPageState extends State<StatsPage> {
     double winePercentage =
         totalDrinks > 0 ? (totalWine / totalDrinks) * 100 : 0;
 
-    // ... (Implement logic for longestStreak and longestBreak)
-
-    setState(() {}); // Update the UI
-  }
-
-  // @override
-  // void dispose() {
-  //   _drinksBox.clear();
-  //   super.dispose();
-  // }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -123,74 +175,117 @@ class _StatsPageState extends State<StatsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 33.h,
-                child: Stack(
-                  children: [
-                    Positioned(
-                      left: 3.w,
-                      top: 3.h,
-                      child: CircleItem(
-                        color: Colors.white,
-                        label: 'Beer',
-                        percentage:
-                            '${totalBeers > 0 ? (totalBeers / totalDrinks * 100).toInt() : 0}%',
-                        size: 23.h,
-                        textColor: Colors.black,
-                      ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  double maxSize = constraints.maxWidth * 0.4;
+
+                  return SizedBox(
+                    height: 27.h,
+                    child: Stack(
+                      children: [
+                        // Beer Circle
+                        if (beerPercentage > 0)
+                          Positioned(
+                            left: 25.w,
+                            child: CircleItem(
+                              color: Colors.white,
+                              label: 'Beer',
+                              percentage: '${beerPercentage.toInt()}%',
+                              size: maxSize * (beerPercentage / 100),
+                              textColor: Colors.black,
+                            ),
+                          ),
+
+                        // Liquor Circle
+                        if (liquorPercentage > 0)
+                          Positioned(
+                            left: 45.w,
+                            child: CircleItem(
+                              color: Colors.grey[400]!,
+                              label: 'Liquor',
+                              percentage: '${liquorPercentage.toInt()}%',
+                              size: maxSize * (liquorPercentage / 100),
+                              textColor: Colors.black,
+                            ),
+                          ),
+
+                        // Wine Circle
+                        if (winePercentage > 0)
+                          Positioned(
+                            left: 35.w,
+                            top: 9.h,
+                            child: CircleItem(
+                              color: Colors.grey[500]!,
+                              label: 'Wine',
+                              percentage: '${winePercentage.toInt()}%',
+                              size: maxSize * (winePercentage / 100),
+                              textColor: Colors.black,
+                            ),
+                          ),
+                      ],
                     ),
-                    Positioned(
-                      // right: 7.w,
-                      left: 54.w,
-                      top: 3.h,
-                      child: CircleItem(
-                        color: Colors.grey[400]!,
-                        label: 'Liquor',
-                        percentage:
-                            '${totalLiquor > 0 ? (totalLiquor / totalDrinks * 100).toInt() : 0}%',
-                        size: 17.h,
-                        textColor: Colors.black,
-                      ),
-                    ),
-                    Positioned(
-                      right: 7.w,
-                      left: 30.w,
-                      top: 20.h,
-                      child: CircleItem(
-                        color: Colors.grey[500]!,
-                        label: 'Wine',
-                        percentage:
-                            '${totalWine > 0 ? (totalWine / totalDrinks * 100).toStringAsFixed(0) : 0}%',
-                        size: 10.h,
-                        textColor: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
-              const SizedBox(height: 40),
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
+              // Use Row to create two columns
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  InfoContainer(
-                      label: 'TOTAL DRINKS', value: totalDrinks.toString()),
-                  InfoContainer(
-                    label: 'LAST DRINK',
-                    value: lastDrinkDate != null
-                        ? DateFormat('MMM d, yyyy').format(lastDrinkDate!)
-                        : 'N/A',
+                  // Left Column
+                  Column(
+                    children: [
+                      InfoContainer(
+                          label: 'TOTAL DRINKS', value: totalDrinks.toString()),
+                      InfoContainer(
+                          label: 'TOTAL BEERS', value: totalBeers.toString()),
+                      InfoContainer(
+                          label: 'TOTAL LIQUOR', value: totalLiquor.toString()),
+                      InfoContainer(
+                          label: 'TOTAL WINE', value: totalWine.toString()),
+                      InfoContainer(
+                          label: 'TOTAL DRINK DAYS',
+                          value: totalDrinkDays.toString()),
+                      InfoContainer(
+                          label: 'NON-DRINK DAYS',
+                          value: totalNonDrinkDays.toString()),
+                    ],
                   ),
-                  InfoContainer(
-                      label: 'TOTAL BEERS', value: totalBeers.toString()),
-                  InfoContainer(
-                      label: 'LONGEST STREAK', value: '$longestStreak days'),
-                  InfoContainer(
-                      label: 'TOTAL LIQUOR', value: totalLiquor.toString()),
-                  InfoContainer(
-                      label: 'LONGEST BREAK', value: '$longestBreak days'),
-                  InfoContainer(
-                      label: 'TOTAL WINE', value: totalWine.toString()),
+
+                  // Right Column
+                  Column(
+                    children: [
+                      InfoContainer(
+                        label: 'LAST DRINK',
+                        value: lastDrinkDate != null
+                            ? DateFormat('MMM d, yyyy').format(lastDrinkDate!)
+                            : 'N/A',
+                      ),
+                      InfoContainer(
+                        label: 'FIRST DRINK',
+                        value: firstDrinkDate != null
+                            ? DateFormat('MMM d, yyyy').format(firstDrinkDate!)
+                            : 'N/A',
+                      ),
+                      InfoContainer(
+                          label: 'LONGEST STREAK',
+                          value: '$longestStreak days'),
+                      InfoContainer(
+                          label: 'LONGEST BREAK', value: '$longestBreak days'),
+                      InfoContainer(
+                        label: 'EARLIEST DRINK',
+                        value: earliestDrinkTime != null
+                            ? DateFormat.jm().format(earliestDrinkTime!)
+                            : 'N/A',
+                      ),
+                      InfoContainer(
+                        label: 'LATEST DRINK',
+                        value: latestDrinkTime != null
+                            ? DateFormat.jm().format(latestDrinkTime!)
+                            : 'N/A',
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],

@@ -17,35 +17,47 @@ class CircleItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // Calculate a suitable font size based on the circle's size
+    double fontSize = size * 0.1;
+
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16,
-                color: textColor,
-                fontWeight: FontWeight.bold,
-              ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
             ),
-            Text(
-              percentage,
-              style: TextStyle(
-                fontSize: 20,
-                color: textColor,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: fontSize, // Use calculated font size
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  percentage,
+                  style: TextStyle(
+                    fontSize: fontSize * 1.2, // Slightly larger percentage
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
