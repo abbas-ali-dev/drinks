@@ -177,21 +177,23 @@ class _StatsPageState extends State<StatsPage> {
             children: [
               LayoutBuilder(
                 builder: (context, constraints) {
-                  double maxSize = constraints.maxWidth * 0.4;
+                  double maxSize = constraints.maxWidth * 0.6;
 
                   return SizedBox(
-                    height: 27.h,
+                    height: 30.h,
                     child: Stack(
                       children: [
                         // Beer Circle
                         if (beerPercentage > 0)
                           Positioned(
-                            left: 25.w,
+                            left: 5.w,
                             child: CircleItem(
                               color: Colors.white,
                               label: 'Beer',
                               percentage: '${beerPercentage.toInt()}%',
-                              size: maxSize * (beerPercentage / 100),
+                              size: beerPercentage < 50
+                                  ? maxSize * (beerPercentage / 100) + 35
+                                  : (maxSize * (beerPercentage / 100)),
                               textColor: Colors.black,
                             ),
                           ),
@@ -199,12 +201,14 @@ class _StatsPageState extends State<StatsPage> {
                         // Liquor Circle
                         if (liquorPercentage > 0)
                           Positioned(
-                            left: 45.w,
+                            left: 37.w,
                             child: CircleItem(
                               color: Colors.grey[400]!,
                               label: 'Liquor',
                               percentage: '${liquorPercentage.toInt()}%',
-                              size: maxSize * (liquorPercentage / 100),
+                              size: liquorPercentage < 50
+                                  ? maxSize * (liquorPercentage / 100) + 35
+                                  : (maxSize * (liquorPercentage / 100)),
                               textColor: Colors.black,
                             ),
                           ),
@@ -212,13 +216,15 @@ class _StatsPageState extends State<StatsPage> {
                         // Wine Circle
                         if (winePercentage > 0)
                           Positioned(
-                            left: 35.w,
-                            top: 9.h,
+                            left: 25.w,
+                            top: 13.h,
                             child: CircleItem(
                               color: Colors.grey[500]!,
                               label: 'Wine',
                               percentage: '${winePercentage.toInt()}%',
-                              size: maxSize * (winePercentage / 100),
+                              size: winePercentage < 50
+                                  ? maxSize * (winePercentage / 100) + 35
+                                  : (maxSize * (winePercentage / 100)),
                               textColor: Colors.black,
                             ),
                           ),
@@ -227,12 +233,10 @@ class _StatsPageState extends State<StatsPage> {
                   );
                 },
               ),
-              // Use Row to create two columns
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left Column
                   Column(
                     children: [
                       InfoContainer(
@@ -251,8 +255,6 @@ class _StatsPageState extends State<StatsPage> {
                           value: totalNonDrinkDays.toString()),
                     ],
                   ),
-
-                  // Right Column
                   Column(
                     children: [
                       InfoContainer(
