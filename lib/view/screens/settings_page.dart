@@ -17,16 +17,23 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final List<String> _timeFormats = ['12 Hour', '24 Hour'];
   final List<String> _cutoffTimes = [
+    '12:00 AM',
+    '12:30 AM',
+    '1:00 AM',
+    '1:30 AM',
+    '2:00 AM',
+    '2:30 AM',
+    '3:00 AM',
+    '3:30 AM',
+    '4:00 AM',
+    '4:30 AM',
+    '5:00 AM',
+    '5:30 AM',
     '6:00 AM',
     '6:30 AM',
     '7:00 AM',
     '7:30 AM',
     '8:00 AM',
-    '8:30 AM',
-    '9:00 AM',
-    '9:30 AM',
-    '10:00 AM',
-    '10:30 AM',
   ];
 
   @override
@@ -233,12 +240,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _launchEmail() async {
     final Uri gmailInboxUri = Uri.parse(
-        'https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox?Subject=Feedback');
+        'https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox?Subject=Feedback_for_Happy_Hour_App');
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
       path: 'halfpriceappz@gmail.com',
       queryParameters: {
-        'subject': 'Feedback_for_Drink_App',
+        'Subject': 'Feedback_for_Happy_Hour_App',
       },
     );
 
@@ -284,7 +291,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ListBody(
               children: <Widget>[
                 Text(
-                  'Are you sure you want to clear all data?\n',
+                  'Are you sure you want to permanently delete all app data?',
                   style: TextStyle(color: Colors.white),
                 ),
               ],

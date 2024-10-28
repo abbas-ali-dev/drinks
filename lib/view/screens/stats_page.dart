@@ -116,11 +116,15 @@ class _StatsPageState extends State<StatsPage> {
       // Calculate total drink days and non-drink days
       totalDrinkDays =
           drinks.map((drink) => drink.dateTime.toLocal().day).toSet().length;
-      totalNonDrinkDays =
-          DateTimeRange(start: firstDrinkDate!, end: lastDrinkDate!)
-                  .duration
-                  .inDays -
-              totalDrinkDays;
+      totalNonDrinkDays = DateTime.now().difference(firstDrinkDate!).inDays -
+          totalDrinkDays +
+          1;
+
+      // totalNonDrinkDays =
+      //     DateTimeRange(start: firstDrinkDate!, end: lastDrinkDate!)
+      //             .duration
+      //             .inDays -
+      //         totalDrinkDays;
     }
 
     setState(() {});
@@ -248,7 +252,7 @@ class _StatsPageState extends State<StatsPage> {
                       InfoContainer(
                           label: 'TOTAL WINE', value: totalWine.toString()),
                       InfoContainer(
-                          label: 'TOTAL DRINK DAYS',
+                          label: 'DRINK DAYS',
                           value: totalDrinkDays.toString()),
                       InfoContainer(
                           label: 'NON-DRINK DAYS',
@@ -260,13 +264,13 @@ class _StatsPageState extends State<StatsPage> {
                       InfoContainer(
                         label: 'LAST DRINK',
                         value: lastDrinkDate != null
-                            ? DateFormat('MMM d, yyyy').format(lastDrinkDate!)
+                            ? _calculateDaysAgo(lastDrinkDate!)
                             : 'N/A',
                       ),
                       InfoContainer(
                         label: 'FIRST DRINK',
                         value: firstDrinkDate != null
-                            ? DateFormat('MMM d, yyyy').format(firstDrinkDate!)
+                            ? _calculateDaysAgo(firstDrinkDate!)
                             : 'N/A',
                       ),
                       InfoContainer(
@@ -296,5 +300,17 @@ class _StatsPageState extends State<StatsPage> {
       ),
       bottomNavigationBar: const CustomBottumNavigationBar(),
     );
+  }
+
+  // Function to calculate days ago from a given date (you already have this)
+  String _calculateDaysAgo(DateTime date) {
+    Duration difference = DateTime.now().difference(date);
+    if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else {
+      return '${difference.inDays} days ago';
+    }
   }
 }

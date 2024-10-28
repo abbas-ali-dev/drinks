@@ -47,17 +47,22 @@ class _MainAppState extends State<MainApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           home: EasySplashScreen(
-            logo: Image.asset('assets/png/ic_launcher.png'),
+            logo: Image.asset('assets/png/drink.png'),
             title: const Text(
               "Drinks",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-            backgroundColor: const Color(0xFFCAD643),
+            backgroundColor: const Color.fromARGB(255, 62, 62, 62),
             showLoader: true,
-            loadingText: const Text("Loading..."),
+            loaderColor: Colors.white,
+            loadingText: const Text(
+              "Loading...",
+              style: TextStyle(color: Colors.white),
+            ),
             navigator: const HomePage(),
             durationInSeconds: 3,
           ),

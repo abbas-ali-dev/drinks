@@ -43,12 +43,12 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.grey[800],
-      title: const Text('Select Time',
-          style: TextStyle(
-              color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
+      // title: const Text('Select Time',
+      //     style: TextStyle(
+      //         color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
       content: SizedBox(
-        height: 20.h,
-        width: 80.w,
+        height: 17.h,
+        width: 55.w,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -61,11 +61,6 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 10),
-                Text(
-                  _selectedTime.hour < 12 ? 'AM' : 'PM',
-                  style: const TextStyle(fontSize: 18, color: Colors.white),
-                ),
-                const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
                     setState(() {
@@ -75,19 +70,23 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
                       _hourController.jumpToItem(_selectedTime.hour % 12);
                     });
                   },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Text(
-                      'Toggle AM/PM',
-                      style: TextStyle(fontSize: 12, color: Colors.white),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Text(
+                          _selectedTime.hour < 12 ? 'AM' : 'PM',
+                          style: const TextStyle(
+                              fontSize: 18, color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 10),
               ],
             ),
           ],
@@ -144,7 +143,7 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
             return Center(
               child: Text(
                 '$displayHour',
-                style: const TextStyle(fontSize: 20, color: Colors.white),
+                style: const TextStyle(fontSize: 23, color: Colors.white),
               ),
             );
           },
@@ -174,7 +173,7 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
             return Center(
               child: Text(
                 '$index'.padLeft(2, '0'),
-                style: const TextStyle(fontSize: 20, color: Colors.white),
+                style: const TextStyle(fontSize: 23, color: Colors.white),
               ),
             );
           },

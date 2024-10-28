@@ -414,9 +414,9 @@ class _MonthlyPageState extends State<MonthlyPage> {
                   ),
                   Text(
                     drinkIcons[i],
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: Colors.white,
-                        fontSize: 30,
+                        fontSize: i == 1 ? 33 : 30,
                         fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(
