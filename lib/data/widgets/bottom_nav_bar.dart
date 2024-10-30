@@ -69,7 +69,7 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
 
     // 2. Create the formatted content string
     String content = "Happy Hour\n";
-    content += DateFormat('EEE MM/dd/yy').format(today) + "\n";
+    content += "${DateFormat('EEE MM/dd/yy').format(today)}\n";
 
     // Add drink icons to the content
     for (var drink in todaysDrinks) {
@@ -84,8 +84,8 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
     // 3. Generate the Branch.io link
     BranchUniversalObject buo = BranchUniversalObject(
       canonicalIdentifier: 'flutter/branch',
-      title: 'My Flutter App',
-      contentDescription: 'Check out this cool content!',
+      title: 'Happy Hour App',
+      contentDescription: 'Check out my cool drinks!',
       publiclyIndex: true,
       locallyIndex: true,
     );
