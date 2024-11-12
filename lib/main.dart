@@ -50,7 +50,7 @@ class _MainAppState extends State<MainApp> {
           home: EasySplashScreen(
             logo: Image.asset('assets/png/drink.png'),
             title: const Text(
-              "Drinks",
+              "Happy Hours",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

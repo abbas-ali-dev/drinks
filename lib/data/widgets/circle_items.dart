@@ -20,15 +20,18 @@ class CircleItem extends StatelessWidget {
     // Calculate a suitable font size based on the circle's size
     double fontSize = size * 0.1;
 
+    // Set a minimum size for the circle
+    double finalSize = size < 50 ? 50 : size; // Minimum size of 50
+
     return SizedBox(
-      width: size,
-      height: size,
+      width: finalSize,
+      height: finalSize,
       child: Stack(
         alignment: Alignment.center,
         children: [
           Container(
-            width: size,
-            height: size,
+            width: finalSize,
+            height: finalSize,
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
@@ -41,7 +44,7 @@ class CircleItem extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: fontSize, // Use calculated font size
+                    fontSize: fontSize,
                     color: textColor,
                     fontWeight: FontWeight.bold,
                   ),
@@ -49,7 +52,7 @@ class CircleItem extends StatelessWidget {
                 Text(
                   percentage,
                   style: TextStyle(
-                    fontSize: fontSize * 1.2, // Slightly larger percentage
+                    fontSize: fontSize * 1.2,
                     color: textColor,
                     fontWeight: FontWeight.bold,
                   ),

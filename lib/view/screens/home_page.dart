@@ -34,6 +34,21 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadDrinksForDate(_selectedDate);
+
+    // Scroll to bottom after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollToBottom();
+    });
+  }
+
+  void scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void _loadDrinksForDate(DateTime date) {
@@ -102,6 +117,21 @@ class _HomePageState extends State<HomePage> {
     if (_selectedDate.isBefore(DateTime.now())) {
       setState(() {
         _selectedDate = _selectedDate.add(const Duration(days: 1));
+        _loadDrinksForDate(_selectedDate);
+      });
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
         _loadDrinksForDate(_selectedDate);
       });
     }
@@ -184,24 +214,27 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              DateFormat('EEEE').format(_selectedDate),
-              style: const TextStyle(
-                  fontSize: 20,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold),
-            ),
-            Text(
-              DateFormat('MMM d, yyyy').format(_selectedDate),
-              style: const TextStyle(
-                  fontSize: 20,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold),
-            ),
-          ],
+        title: GestureDetector(
+          onTap: () => _selectDate(context), // Call _selectDate on tap
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                DateFormat('EEEE').format(_selectedDate),
+                style: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
+              ),
+              Text(
+                DateFormat('MMM d, yyyy').format(_selectedDate),
+                style: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
         leading: IconButton(
           icon: const Icon(
@@ -262,17 +295,6 @@ class _HomePageState extends State<HomePage> {
                           _drinksForSelectedDate[index]['note'] ?? '',
                           style: const TextStyle(color: Colors.grey),
                         ),
-                        //   x delete button for delete any drink after add
-
-                        // trailing: IconButton(
-                        //   icon: const Icon(
-                        //     Icons.close,
-                        //     color: Colors.white,
-                        //   ),
-                        //   onPressed: () {
-                        //     _deleteDrink(index);
-                        //   },
-                        // ),
                       ),
                     );
                   },

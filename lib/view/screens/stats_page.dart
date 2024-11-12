@@ -2,7 +2,6 @@ import 'package:drinks/data/widgets/circle_items.dart';
 import 'package:drinks/data/widgets/info_container.dart';
 import 'package:drinks/data/widgets/bottom_nav_bar.dart';
 import 'package:drinks/models/drink_model.dart';
-import 'package:drinks/view/screens/home_page.dart';
 import 'package:drinks/view/screens/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -119,12 +118,6 @@ class _StatsPageState extends State<StatsPage> {
       totalNonDrinkDays = DateTime.now().difference(firstDrinkDate!).inDays -
           totalDrinkDays +
           1;
-
-      // totalNonDrinkDays =
-      //     DateTimeRange(start: firstDrinkDate!, end: lastDrinkDate!)
-      //             .duration
-      //             .inDays -
-      //         totalDrinkDays;
     }
 
     setState(() {});
@@ -179,63 +172,70 @@ class _StatsPageState extends State<StatsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  double maxSize = constraints.maxWidth * 0.6;
+              SizedBox(
+                height: 30.h, // Increased height to accommodate circles
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Define base size for the circles
+                    double baseSize = 270;
 
-                  return SizedBox(
-                    height: 30.h,
-                    child: Stack(
+                    return Stack(
                       children: [
-                        // Beer Circle
+                        // Beer Circle (Top Left)
                         if (beerPercentage > 0)
                           Positioned(
-                            left: 5.w,
+                            top: 10,
+                            left: 20,
                             child: CircleItem(
-                              color: Colors.white,
+                              color: Colors.grey[300]!,
                               label: 'Beer',
                               percentage: '${beerPercentage.toInt()}%',
+                              // Calculate size based on percentage
                               size: beerPercentage < 50
-                                  ? maxSize * (beerPercentage / 100) + 35
-                                  : (maxSize * (beerPercentage / 100)),
+                                  ? baseSize * (beerPercentage / 70)
+                                  : baseSize * (beerPercentage / 100),
                               textColor: Colors.black,
                             ),
                           ),
 
-                        // Liquor Circle
+                        // Liquor Circle (Top Right)
                         if (liquorPercentage > 0)
                           Positioned(
-                            left: 37.w,
+                            top: 10,
+                            right: 20,
                             child: CircleItem(
-                              color: Colors.grey[400]!,
+                              color: Colors.grey[300]!,
                               label: 'Liquor',
                               percentage: '${liquorPercentage.toInt()}%',
+                              // Calculate size based on percentage
                               size: liquorPercentage < 50
-                                  ? maxSize * (liquorPercentage / 100) + 35
-                                  : (maxSize * (liquorPercentage / 100)),
+                                  ? baseSize * (liquorPercentage / 70)
+                                  : baseSize * (liquorPercentage / 100),
                               textColor: Colors.black,
                             ),
                           ),
 
-                        // Wine Circle
+                        // Wine Circle (Bottom Center)
                         if (winePercentage > 0)
                           Positioned(
-                            left: 25.w,
-                            top: 13.h,
+                            bottom: 20,
+                            left: (MediaQuery.of(context).size.width / 2) -
+                                (baseSize * (winePercentage / 100)) / 2,
                             child: CircleItem(
-                              color: Colors.grey[500]!,
+                              color: Colors.grey[300]!,
                               label: 'Wine',
                               percentage: '${winePercentage.toInt()}%',
+                              // Calculate size based on percentage
                               size: winePercentage < 50
-                                  ? maxSize * (winePercentage / 100) + 35
-                                  : (maxSize * (winePercentage / 100)),
+                                  ? baseSize * (winePercentage / 70)
+                                  : baseSize * (winePercentage / 100),
                               textColor: Colors.black,
                             ),
                           ),
                       ],
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
