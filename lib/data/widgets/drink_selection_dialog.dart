@@ -2,7 +2,7 @@ import 'package:drinks/models/drink_model.dart'; // Import your Drink model
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
-class DrinkSelectionDialog extends StatelessWidget {
+class DrinkSelectionDialog extends StatefulWidget {
   final Drink currentDrink; // The drink to potentially modify
   final Function(Drink) onDrinkSelected; // Callback to update the drink
   final Function() onDeleteDrink; // Callback to delete the drink
@@ -13,6 +13,26 @@ class DrinkSelectionDialog extends StatelessWidget {
     required this.onDrinkSelected,
     required this.onDeleteDrink, // Add the delete callback
   }) : super(key: key);
+
+  @override
+  State<DrinkSelectionDialog> createState() => _DrinkSelectionDialogState();
+}
+
+class _DrinkSelectionDialogState extends State<DrinkSelectionDialog> {
+  TextEditingController _noteController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the text field with the current drink's note
+    _noteController.text = widget.currentDrink.note ?? '';
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +57,11 @@ class DrinkSelectionDialog extends StatelessWidget {
                 return GestureDetector(
                   onTap: () {
                     final newDrink = Drink(
-                      dateTime: currentDrink.dateTime,
+                      dateTime: widget.currentDrink.dateTime,
                       drinkType: drink["name"],
+                      note: _noteController.text, // Add the note here
                     );
-                    onDrinkSelected(newDrink);
+                    widget.onDrinkSelected(newDrink);
                     Navigator.pop(context);
                   },
                   child: Column(
@@ -55,21 +76,23 @@ class DrinkSelectionDialog extends StatelessWidget {
               }).toList(),
             ),
             const Divider(color: Colors.grey, thickness: 2),
-            const Padding(
-              padding: EdgeInsets.only(left: 40, top: 10, bottom: 10),
+            Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
               child: TextField(
-                style: TextStyle(color: Colors.white),
+                controller: _noteController,
+                style: const TextStyle(color: Colors.white, fontSize: 25),
                 keyboardType: TextInputType.text,
                 maxLines: 1,
-                decoration: InputDecoration(
-                  labelText: 'Note about drink',
-                  labelStyle: TextStyle(
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(
+                  hintText: 'Note about drink',
+                  hintStyle: TextStyle(
                     color: Colors.grey,
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
                     fontStyle: FontStyle.italic,
                   ),
-                  border: InputBorder.none, // Remove the underline
+                  border: InputBorder.none,
                 ),
               ),
             ),
@@ -77,7 +100,7 @@ class DrinkSelectionDialog extends StatelessWidget {
               height: 6.h,
               width: 60.w,
               child: ElevatedButton(
-                onPressed: onDeleteDrink,
+                onPressed: widget.onDeleteDrink,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                 ),

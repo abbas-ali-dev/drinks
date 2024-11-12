@@ -23,6 +23,11 @@ class _MonthlyPageState extends State<MonthlyPage> {
   int totalLiquorForMonth = 0;
   int totalWineForMonth = 0;
 
+  int totalDrinksForDoublePreviousMonth = 0;
+  int totalBeersForDoublePreviousMonth = 0;
+  int totalLiquorForDoublePreviousMonth = 0;
+  int totalWineForDoublePreviousMonth = 0;
+
   int totalDrinksForPreviousMonth = 0;
   int totalBeersForPreviousMonth = 0;
   int totalLiquorForPreviousMonth = 0;
@@ -32,6 +37,9 @@ class _MonthlyPageState extends State<MonthlyPage> {
   int totalBeersForNextMonth = 0;
   int totalLiquorForNextMonth = 0;
   int totalWineForNextMonth = 0;
+
+  String doublepreviousMonthName = '';
+  int doublepreviousMonthYear = 0;
 
   String previousMonthName = '';
   int previousMonthYear = 0;
@@ -68,6 +76,12 @@ class _MonthlyPageState extends State<MonthlyPage> {
         isNextMonth: true);
 
     // Update month and year for display
+    doublepreviousMonthName = DateTime(monthDate.year, monthDate.month - 2)
+        .monthName(); // Correct month name calculation
+    doublepreviousMonthYear =
+        DateTime(monthDate.year, monthDate.month - 2).year;
+
+    // Update month and year for display
     previousMonthName = DateTime(monthDate.year, monthDate.month - 1)
         .monthName(); // Correct month name calculation
     previousMonthYear = DateTime(monthDate.year, monthDate.month - 1).year;
@@ -81,6 +95,11 @@ class _MonthlyPageState extends State<MonthlyPage> {
     totalBeersForMonth = 0;
     totalLiquorForMonth = 0;
     totalWineForMonth = 0;
+
+    totalDrinksForDoublePreviousMonth = 0;
+    totalBeersForDoublePreviousMonth = 0;
+    totalLiquorForDoublePreviousMonth = 0;
+    totalWineForDoublePreviousMonth = 0;
 
     totalDrinksForPreviousMonth = 0;
     totalBeersForPreviousMonth = 0;
@@ -234,7 +253,17 @@ class _MonthlyPageState extends State<MonthlyPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Previous Month Section
+            //  doublePrevious Month Section
+            _buildMonthSummarySection(
+              monthName: doublepreviousMonthName,
+              monthYear: doublepreviousMonthYear,
+              totalDrinks: totalDrinksForDoublePreviousMonth,
+              totalBeers: totalBeersForDoublePreviousMonth,
+              totalLiquor: totalLiquorForDoublePreviousMonth,
+              totalWine: totalWineForDoublePreviousMonth,
+            ),
+
+            // Next Month Section
             _buildMonthSummarySection(
               monthName: previousMonthName,
               monthYear: previousMonthYear,
@@ -257,16 +286,6 @@ class _MonthlyPageState extends State<MonthlyPage> {
               daysInMonth: daysInMonth,
               offset: offset,
               monthDate: monthDate,
-            ),
-
-            // Next Month Section
-            _buildMonthSummarySection(
-              monthName: nextMonthName,
-              monthYear: nextMonthYear,
-              totalDrinks: totalDrinksForNextMonth,
-              totalBeers: totalBeersForNextMonth,
-              totalLiquor: totalLiquorForNextMonth,
-              totalWine: totalWineForNextMonth,
             ),
           ],
         ),

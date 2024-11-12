@@ -1,8 +1,9 @@
+// drink_model.dart
 import 'package:hive/hive.dart';
 
-part 'drink_model.g.dart'; // Important for Hive code generation
+part 'drink_model.g.dart';
 
-@HiveType(typeId: 0) // Assign a unique type ID to your model
+@HiveType(typeId: 0)
 class Drink {
   @HiveField(0)
   late DateTime dateTime;
@@ -10,5 +11,8 @@ class Drink {
   @HiveField(1)
   final String drinkType;
 
-  Drink({required this.dateTime, required this.drinkType});
+  @HiveField(2)
+  final String? note;
+
+  Drink({required this.dateTime, required this.drinkType, this.note});
 }

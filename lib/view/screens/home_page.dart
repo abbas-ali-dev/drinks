@@ -18,9 +18,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List totalDrinks = [
-    {"name": "beer", "image": Image.asset("assets/png/beer.png")},
     {"name": "drink", "image": Image.asset("assets/png/drink.png")},
     {"name": "wine", "image": Image.asset("assets/png/wine.png")},
+    {"name": "beer", "image": Image.asset("assets/png/beer.png")},
   ];
   int? selectedDrinkIndex;
   final ScrollController _scrollController = ScrollController();
@@ -51,7 +51,8 @@ class _HomePageState extends State<HomePage> {
           'time': selectedTimeFormatGlobally == '12 Hour'
               ? DateFormat.jm().format(drink.dateTime.toLocal())
               : DateFormat('HH:mm').format(drink.dateTime),
-          'dateTime': drink.dateTime, // Add dateTime to the map
+          'dateTime': drink.dateTime,
+          'note': drink.note,
         };
       }).toList();
     });
@@ -61,7 +62,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       if (selectedDrinkIndex != null) {
         final newDrink = Drink(
-          dateTime: DateTime.now(),
+          dateTime: _selectedDate,
           drinkType: totalDrinks[selectedDrinkIndex!]["name"],
         );
 
@@ -123,8 +124,10 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) => DrinkSelectionDialog(
         currentDrink: Drink(
-            dateTime: currentDrink['dateTime'],
-            drinkType: currentDrink['type']),
+          dateTime: currentDrink['dateTime'],
+          drinkType: currentDrink['type'],
+          note: currentDrink['note'], // Pass the note to the dialog
+        ),
         onDrinkSelected: (newDrink) {
           // Update the drink in Hive
           final box = Hive.box<Drink>('drinksBox');
@@ -134,7 +137,6 @@ class _HomePageState extends State<HomePage> {
           _loadDrinksForDate(_selectedDate);
         },
         onDeleteDrink: () {
-          // Provide the onDeleteDrink callback
           // Delete the drink from Hive
           final box = Hive.box<Drink>('drinksBox');
           box.deleteAt(index);
@@ -165,6 +167,7 @@ class _HomePageState extends State<HomePage> {
               final newDrink = Drink(
                 dateTime: newTime,
                 drinkType: oldDrink.drinkType,
+                note: oldDrink.note, // Preserve the note
               );
               box.putAt(index, newDrink); // Replace the old drink
             }
@@ -227,7 +230,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Expanded(
               child: Padding(
-                padding: EdgeInsets.only(left: 25.w, top: 1.h),
+                padding: EdgeInsets.only(left: 27.w, top: 1.h),
                 child: ListView.builder(
                   controller: _scrollController,
                   shrinkWrap: true,
@@ -255,7 +258,10 @@ class _HomePageState extends State<HomePage> {
                                 fontSize: 20, color: Colors.white),
                           ),
                         ),
-
+                        subtitle: Text(
+                          _drinksForSelectedDate[index]['note'] ?? '',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
                         //   x delete button for delete any drink after add
 
                         // trailing: IconButton(
@@ -338,7 +344,11 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
+              icon: const Icon(
+                Icons.menu,
+                color: Colors.white,
+                size: 40,
+              ),
               onPressed: () {
                 Navigator.push(
                     context,
@@ -348,7 +358,11 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.add, color: Colors.white),
+              icon: const Icon(
+                Icons.add,
+                color: Colors.white,
+                size: 40,
+              ),
               onPressed: () {
                 setState(() {
                   _showDrinkSelection =
@@ -357,7 +371,11 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.share, color: Colors.white),
+              icon: const Icon(
+                Icons.near_me_outlined,
+                color: Colors.white,
+                size: 40,
+              ),
               onPressed: () {
                 Navigator.push(
                     context,
@@ -370,14 +388,5 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-  }
-
-  void _deleteDrink(int index) {
-    // Delete from Hive box
-    final box = Hive.box<Drink>('drinksBox');
-    box.deleteAt(index);
-
-    // Reload drinks for the current date
-    _loadDrinksForDate(_selectedDate);
   }
 }

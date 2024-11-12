@@ -24,7 +24,11 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
+            icon: const Icon(
+              Icons.menu,
+              color: Colors.white,
+              size: 40,
+            ),
             onPressed: () {
               Navigator.push(
                   context,
@@ -34,7 +38,11 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.home, color: Colors.white),
+            icon: const Icon(
+              Icons.home,
+              color: Colors.white,
+              size: 40,
+            ),
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
@@ -46,7 +54,11 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.share, color: Colors.white),
+            icon: const Icon(
+              Icons.share,
+              color: Colors.white,
+              size: 40,
+            ),
             onPressed: () {
               shareContent();
             },

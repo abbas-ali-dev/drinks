@@ -37,6 +37,20 @@ class _SettingsPageState extends State<SettingsPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Load settings from Hive
+    selectedTimeFormatGlobally =
+        Hive.box('settingsBox').get('timeFormat') ?? '12 Hour';
+
+    // Load cutoff time and handle missing values
+    final loadedCutoffTime = Hive.box('settingsBox').get('cutoffTime');
+    selectedCutoffTimeGlobally = _cutoffTimes.contains(loadedCutoffTime ?? '')
+        ? loadedCutoffTime
+        : '6:00 AM';
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
@@ -98,6 +112,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     onChanged: (String? newValue) {
                       setState(() {
                         selectedTimeFormatGlobally = newValue!;
+                        // Save to Hive:
+                        Hive.box('settingsBox').put('timeFormat', newValue);
                       });
                       Navigator.pushAndRemoveUntil(
                         context,
@@ -153,6 +169,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     onChanged: (String? newValue) {
                       setState(() {
                         selectedCutoffTimeGlobally = newValue!;
+                        // Save to Hive:
+                        Hive.box('settingsBox').put('cutoffTime', newValue);
                       });
                       debugPrint(
                           'Selected cutoff time: $selectedCutoffTimeGlobally');

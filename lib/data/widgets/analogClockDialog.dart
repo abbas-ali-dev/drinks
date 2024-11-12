@@ -43,9 +43,6 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.grey[800],
-      // title: const Text('Select Time',
-      //     style: TextStyle(
-      //         color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
       content: SizedBox(
         height: 17.h,
         width: 55.w,
@@ -101,15 +98,20 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
         ),
         TextButton(
           onPressed: () {
+            // Check if the selected time is in the future
+            if (_selectedTime.isAfter(DateTime.now())) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("You can't select a future time."),
+                ),
+              );
+              return; // Don't close the dialog
+            }
+
             // Pass the updated _selectedTime to the callback
             widget.onTimeSelected(_selectedTime);
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const HomePage(),
-              ),
-              (route) => false,
-            );
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const HomePage()));
           },
           child: const Text('OK', style: TextStyle(color: Colors.white)),
         ),
@@ -128,9 +130,19 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
         diameterRatio: 1,
         onSelectedItemChanged: (index) {
           setState(() {
-            // Update the hour of the existing _selectedTime object
-            _selectedTime = _selectedTime.copyWith(
-              hour: (index + (_selectedTime.hour >= 12 ? 12 : 0)) % 24,
+            int newHour = (index + (_selectedTime.hour >= 12 ? 12 : 0)) % 24;
+
+            // Prevent selecting future hours
+            if (newHour > DateTime.now().hour &&
+                _selectedTime.day == DateTime.now().day) {
+              newHour = DateTime.now().hour;
+            }
+
+            _selectedTime = _selectedTime.copyWith(hour: newHour);
+            _hourController.animateToItem(
+              newHour % 12, // Adjust for 12-hour format
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
             );
           });
         },
@@ -163,8 +175,21 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
         diameterRatio: 1,
         onSelectedItemChanged: (index) {
           setState(() {
-            // Update the minute of the existing _selectedTime object
-            _selectedTime = _selectedTime.copyWith(minute: index);
+            int newMinute = index;
+
+            // Prevent selecting future minutes if the hour is the current hour
+            if (_selectedTime.hour == DateTime.now().hour &&
+                newMinute > DateTime.now().minute &&
+                _selectedTime.day == DateTime.now().day) {
+              newMinute = DateTime.now().minute;
+            }
+
+            _selectedTime = _selectedTime.copyWith(minute: newMinute);
+            _minuteController.animateToItem(
+              newMinute,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
           });
         },
         childDelegate: ListWheelChildBuilderDelegate(
