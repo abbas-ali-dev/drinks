@@ -32,14 +32,23 @@ class _StatsPageState extends State<StatsPage> {
   DateTime? earliestDrinkTime;
   DateTime? latestDrinkTime;
 
+  int _selectedYear = DateTime.now().year; // Track the selected year
+
+  // Function to get a list of years from 2000 to the current year
+  List<int> _getYears() {
+    int currentYear = DateTime.now().year;
+    return List<int>.generate(currentYear - 1999, (index) => index + 2000);
+  }
+
   @override
   void initState() {
     super.initState();
     _drinksBox = Hive.box<Drink>('drinksBox');
-    _calculateStats();
+    _calculateStats(
+        _selectedYear); // Calculate stats for the current year initially
   }
 
-  void _calculateStats() {
+  void _calculateStats(int year) {
     // Reset values
     totalDrinks = 0;
     totalBeers = 0;
@@ -58,8 +67,10 @@ class _StatsPageState extends State<StatsPage> {
     int currentBreak = 0;
     DateTime? previousDate;
 
-    // Iterate through drinks and update values
-    final drinks = _drinksBox.values.toList();
+    // Iterate through drinks and update values, filtering by year
+    final drinks = _drinksBox.values
+        .where((drink) => drink.dateTime.year == year)
+        .toList();
     drinks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     if (drinks.isNotEmpty) {
@@ -112,15 +123,66 @@ class _StatsPageState extends State<StatsPage> {
         previousDate = drink.dateTime;
       }
 
-      // Calculate total drink days and non-drink days
+      // Calculate total drink days and non-drink days for the selected year
       totalDrinkDays =
           drinks.map((drink) => drink.dateTime.toLocal().day).toSet().length;
-      totalNonDrinkDays = DateTime.now().difference(firstDrinkDate!).inDays -
-          totalDrinkDays +
-          1;
+
+      // Correct calculation for non-drink days
+      if (year == DateTime.now().year) {
+        // If it's the current year, calculate non-drink days until today
+        totalNonDrinkDays = DateTime.now().difference(firstDrinkDate!).inDays -
+            totalDrinkDays +
+            1;
+      } else {
+        // If it's a past year, use the full year's days
+        totalNonDrinkDays =
+            (DateTime(year + 1).difference(DateTime(year)).inDays) -
+                totalDrinkDays;
+      }
     }
 
     setState(() {});
+  }
+
+  Future<void> _selectYear(BuildContext context) async {
+    // Show a year picker dialog using DropdownButton
+    int? pickedYear = await showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return SizedBox(
+          height: 300,
+          width: 300,
+          child: AlertDialog(
+            title: const Text(
+              'Select Year',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            content: DropdownButton<int>(
+              value: _selectedYear,
+              onChanged: (int? newValue) {
+                if (newValue != null) {
+                  Navigator.of(context).pop(newValue);
+                }
+              },
+              items: _getYears().map((int year) {
+                return DropdownMenuItem<int>(
+                  value: year,
+                  child: Text(year.toString()),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (pickedYear != null && pickedYear != _selectedYear) {
+      setState(() {
+        _selectedYear = pickedYear;
+        _calculateStats(
+            _selectedYear); // Recalculate stats for the selected year
+      });
+    }
   }
 
   @override
@@ -139,20 +201,24 @@ class _StatsPageState extends State<StatsPage> {
           color: Colors.white,
           icon: const Icon(
             Icons.arrow_back,
+            size: 40,
           ),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        title: const Text('All Time',
-            style: TextStyle(
-                fontSize: 25,
-                color: Colors.white,
-                fontWeight: FontWeight.bold)),
+        title: GestureDetector(
+          onTap: () => _selectYear(context), // Open year picker on tap
+          child: Text('$_selectedYear', // Display the selected year
+              style: const TextStyle(
+                  fontSize: 25,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold)),
+        ),
         actions: [
           IconButton(
             color: Colors.white,
-            icon: const Icon(Icons.arrow_forward),
+            icon: const Icon(Icons.arrow_forward, size: 40),
             onPressed: () {
               Navigator.push(
                   context,
@@ -172,71 +238,78 @@ class _StatsPageState extends State<StatsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 30.h, // Increased height to accommodate circles
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Define base size for the circles
-                    double baseSize = 270;
+              if (beerPercentage == 0 &&
+                  liquorPercentage == 0 &&
+                  winePercentage == 0)
+                SizedBox(
+                  height: 3.h,
+                )
+              else
+                SizedBox(
+                  height: 30.h, // Increased height to accommodate circles
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Define base size for the circles
+                      double baseSize = 200;
 
-                    return Stack(
-                      children: [
-                        // Beer Circle (Top Left)
-                        if (beerPercentage > 0)
-                          Positioned(
-                            top: 10,
-                            left: 20,
-                            child: CircleItem(
-                              color: Colors.grey[300]!,
-                              label: 'Beer',
-                              percentage: '${beerPercentage.toInt()}%',
-                              // Calculate size based on percentage
-                              size: beerPercentage < 50
-                                  ? baseSize * (beerPercentage / 70)
-                                  : baseSize * (beerPercentage / 100),
-                              textColor: Colors.black,
+                      return Stack(
+                        children: [
+                          // Beer Circle (Top Left)
+                          if (liquorPercentage > 0)
+                            Positioned(
+                              top: 10,
+                              left: 10,
+                              child: CircleItem(
+                                color: Colors.grey[300]!,
+                                label: 'Liquor',
+                                percentage: '${liquorPercentage.toInt()}%',
+                                // Calculate size based on percentage
+                                size: liquorPercentage < 50
+                                    ? baseSize * (liquorPercentage / 70)
+                                    : baseSize * (liquorPercentage / 100),
+                                textColor: Colors.black,
+                              ),
                             ),
-                          ),
 
-                        // Liquor Circle (Top Right)
-                        if (liquorPercentage > 0)
-                          Positioned(
-                            top: 10,
-                            right: 20,
-                            child: CircleItem(
-                              color: Colors.grey[300]!,
-                              label: 'Liquor',
-                              percentage: '${liquorPercentage.toInt()}%',
-                              // Calculate size based on percentage
-                              size: liquorPercentage < 50
-                                  ? baseSize * (liquorPercentage / 70)
-                                  : baseSize * (liquorPercentage / 100),
-                              textColor: Colors.black,
+                          // Liquor Circle (Top Right)
+                          if (winePercentage > 0)
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: CircleItem(
+                                color: Colors.grey[300]!,
+                                label: 'Wine',
+                                percentage: '${winePercentage.toInt()}%',
+                                // Calculate size based on percentage
+                                size: winePercentage < 50
+                                    ? baseSize * (winePercentage / 70)
+                                    : baseSize * (winePercentage / 100),
+                                textColor: Colors.black,
+                              ),
                             ),
-                          ),
 
-                        // Wine Circle (Bottom Center)
-                        if (winePercentage > 0)
-                          Positioned(
-                            bottom: 20,
-                            left: (MediaQuery.of(context).size.width / 2) -
-                                (baseSize * (winePercentage / 100)) / 2,
-                            child: CircleItem(
-                              color: Colors.grey[300]!,
-                              label: 'Wine',
-                              percentage: '${winePercentage.toInt()}%',
-                              // Calculate size based on percentage
-                              size: winePercentage < 50
-                                  ? baseSize * (winePercentage / 70)
-                                  : baseSize * (winePercentage / 100),
-                              textColor: Colors.black,
+                          // Wine Circle (Bottom Center)
+                          if (beerPercentage > 0)
+                            Positioned(
+                              bottom: 10,
+                              left: (MediaQuery.of(context).size.width / 2) -
+                                  (baseSize * (beerPercentage / 100)) / 1.2,
+                              child: CircleItem(
+                                color: Colors.grey[300]!,
+                                label: 'Beer',
+                                percentage: '${beerPercentage.toInt()}%',
+                                // Calculate size based on percentage
+                                size: beerPercentage < 50
+                                    ? baseSize * (beerPercentage / 70)
+                                    : baseSize * (beerPercentage / 100),
+                                textColor: Colors.black,
+                              ),
                             ),
-                          ),
-                      ],
-                    );
-                  },
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,11 +319,11 @@ class _StatsPageState extends State<StatsPage> {
                       InfoContainer(
                           label: 'TOTAL DRINKS', value: totalDrinks.toString()),
                       InfoContainer(
-                          label: 'TOTAL BEERS', value: totalBeers.toString()),
-                      InfoContainer(
                           label: 'TOTAL LIQUOR', value: totalLiquor.toString()),
                       InfoContainer(
                           label: 'TOTAL WINE', value: totalWine.toString()),
+                      InfoContainer(
+                          label: 'TOTAL BEERS', value: totalBeers.toString()),
                       InfoContainer(
                           label: 'DRINK DAYS',
                           value: totalDrinkDays.toString()),

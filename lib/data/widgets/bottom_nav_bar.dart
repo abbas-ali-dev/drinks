@@ -81,7 +81,7 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
 
     // 2. Create the formatted content string
     String content = "Happy Hour\n";
-    content += "${DateFormat('EEE MM/dd/yy').format(today)}\n";
+    // content += "${DateFormat('EEE MM/dd/yy').format(today)}\n";
 
     // Add drink icons to the content
     for (var drink in todaysDrinks) {

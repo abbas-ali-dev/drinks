@@ -33,6 +33,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+
+    // Load drinks for the initial date
     _loadDrinksForDate(_selectedDate);
 
     // Scroll to bottom after the widget is built
@@ -140,10 +142,14 @@ class _HomePageState extends State<HomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (ModalRoute.of(context)?.settings.arguments == true) {
+
+    // Get the date argument from the route settings
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is DateTime) {
       setState(() {
-        _loadDrinksForDate(_selectedDate); // Reload drinks with new format
+        _selectedDate = arguments; // Update _selectedDate with the passed date
       });
+      _loadDrinksForDate(_selectedDate); // Reload drinks for the new date
     }
   }
 
@@ -239,6 +245,7 @@ class _HomePageState extends State<HomePage> {
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back,
+            size: 40,
             color: Colors.white,
           ),
           onPressed: _goToPreviousDay,
@@ -246,7 +253,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             color: Colors.white,
-            icon: const Icon(Icons.arrow_forward),
+            icon: const Icon(Icons.arrow_forward, size: 40),
             onPressed: _selectedDate.isBefore(DateTime(DateTime.now().year,
                     DateTime.now().month, DateTime.now().day))
                 ? _goToNextDay

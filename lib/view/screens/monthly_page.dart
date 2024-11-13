@@ -1,6 +1,7 @@
 import 'package:drinks/data/enums/month_names.dart';
 import 'package:drinks/data/widgets/bottom_nav_bar.dart';
 import 'package:drinks/models/drink_model.dart';
+import 'package:drinks/view/screens/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -12,6 +13,7 @@ class MonthlyPage extends StatefulWidget {
 }
 
 class _MonthlyPageState extends State<MonthlyPage> {
+  final DateTime _selectedDate = DateTime.now();
   DateTime _currentDate = DateTime.now();
   final List<String> drinkIcons = ['🍸', '🍷', '🍺'];
   final List<String> drinkTypes = ['drink', 'wine', 'beer'];
@@ -186,6 +188,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
           color: Colors.white,
           icon: const Icon(
             Icons.arrow_back,
+            size: 40,
           ),
           onPressed: () {
             _goToPreviousMonth();
@@ -213,7 +216,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
         actions: [
           IconButton(
             color: Colors.white,
-            icon: const Icon(Icons.arrow_forward),
+            icon: const Icon(Icons.arrow_forward, size: 40),
             onPressed: _currentDate.isBefore(DateTime(
                     DateTime.now().year,
                     DateTime.now().month,
@@ -251,7 +254,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             //  doublePrevious Month Section
             _buildMonthSummarySection(
@@ -368,17 +371,29 @@ class _MonthlyPageState extends State<MonthlyPage> {
                               adjustedDayIndex <= daysInMonth!
                           ? GestureDetector(
                               onTap: () {
-                                debugPrint('Tapped on: $day');
-                                // Navigate to home page with selected date
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (context) => const HomePage(),
-                                //     settings: RouteSettings(
-                                //       arguments: day, // Pass the selected date
-                                //     ),
-                                //   ),
-                                // );
+                                // Check if the date is in the future
+                                if (day.isAfter(DateTime.now())) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          "You can't see the drinks for a future date."),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                // Navigate to HomePage if the date is not in the future
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HomePage(),
+                                    settings: RouteSettings(
+                                      arguments: day, // Pass the selected date
+                                    ),
+                                  ),
+                                  (route) =>
+                                      false, // Remove all previous routes
+                                );
                               },
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
