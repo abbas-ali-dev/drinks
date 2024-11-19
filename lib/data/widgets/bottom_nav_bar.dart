@@ -49,11 +49,18 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
             },
           ),
           IconButton(
-            icon: Icon(
-              _isMenuOpen ? Icons.settings : Icons.home,
-              color: Colors.white,
-              size: 40,
-            ),
+            icon: _isMenuOpen
+                ? const Icon(
+                    Icons.settings,
+                    color: Colors.white,
+                    size: 40,
+                  )
+                : Image.asset(
+                    "assets/png/home.png",
+                    width: 40,
+                    height: 40,
+                    color: Colors.white,
+                  ),
             onPressed: () {
               if (_isMenuOpen) {
                 Navigator.push(

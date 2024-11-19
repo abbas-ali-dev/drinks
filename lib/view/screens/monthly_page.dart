@@ -217,13 +217,11 @@ class _MonthlyPageState extends State<MonthlyPage> {
           IconButton(
             color: Colors.white,
             icon: const Icon(Icons.arrow_forward, size: 40),
-            onPressed: _currentDate.isBefore(DateTime(
-                    DateTime.now().year,
-                    DateTime.now().month,
-                    DateTime.now().day,
-                    DateTime.now().weekday))
-                ? _goToNextMonth
-                : null,
+            // Disable forward arrow if current month is displayed
+            onPressed: _currentDate.year == DateTime.now().year &&
+                    _currentDate.month == DateTime.now().month
+                ? null
+                : _goToNextMonth,
           ),
         ],
         centerTitle: true,

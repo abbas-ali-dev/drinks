@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   int? selectedDrinkIndex;
   final ScrollController _scrollController = ScrollController();
   bool _isMenuOpen = false;
+  bool _showNotes = false;
 
   DateTime _selectedDate = DateTime.now();
   List<Map<String, dynamic>> _drinksForSelectedDate = [];
@@ -56,10 +57,9 @@ class _HomePageState extends State<HomePage> {
   void _loadDrinksForDate(DateTime date) {
     final box = Hive.box<Drink>('drinksBox');
     final drinksFromHive = box.values.where((drink) {
-      final adjustedDrinkDate = getAdjustedDate(drink.dateTime);
-      return adjustedDrinkDate.year == date.year &&
-          adjustedDrinkDate.month == date.month &&
-          adjustedDrinkDate.day == date.day;
+      return drink.dateTime.year == date.year &&
+          drink.dateTime.month == date.month &&
+          drink.dateTime.day == date.day;
     }).toList();
 
     setState(() {
@@ -81,21 +81,18 @@ class _HomePageState extends State<HomePage> {
       if (selectedDrinkIndex != null) {
         DateTime drinkDateTime;
 
-        // Check if selected date is today
         if (_selectedDate.year == DateTime.now().year &&
             _selectedDate.month == DateTime.now().month &&
             _selectedDate.day == DateTime.now().day) {
-          // For current date, use current time
           drinkDateTime = DateTime.now();
         } else {
-          // For past dates, use the 6 PM or last drink + 1 hour logic
           final drinksForDay = _drinksForSelectedDate;
           if (drinksForDay.isEmpty) {
             drinkDateTime = DateTime(
               _selectedDate.year,
               _selectedDate.month,
               _selectedDate.day,
-              18, // 6 PM
+              18,
               0,
             );
           } else {
@@ -126,60 +123,6 @@ class _HomePageState extends State<HomePage> {
       }
     });
   }
-
-  DateTime getAdjustedDate(DateTime drinkDateTime) {
-    // Parse cutoff time from settings
-    final cutoffTimeStr = selectedCutoffTimeGlobally;
-    final cutoffTimeParts = cutoffTimeStr.split(':');
-    final cutoffHour = int.parse(cutoffTimeParts[0]);
-    final cutoffMinute = int.parse(cutoffTimeParts[1].split(' ')[0]);
-
-    // Convert AM/PM to 24-hour format if needed
-    int adjustedCutoffHour = cutoffHour;
-    if (cutoffTimeStr.contains('PM') && cutoffHour != 12) {
-      adjustedCutoffHour += 12;
-    } else if (cutoffTimeStr.contains('AM') && cutoffHour == 12) {
-      adjustedCutoffHour = 0;
-    }
-
-    // If drink time is before cutoff time, assign it to previous day
-    if (drinkDateTime.hour < adjustedCutoffHour ||
-        (drinkDateTime.hour == adjustedCutoffHour &&
-            drinkDateTime.minute < cutoffMinute)) {
-      return drinkDateTime.subtract(const Duration(days: 1));
-    }
-
-    return drinkDateTime;
-  }
-
-  // void _addDrink() {
-  //   setState(() {
-  //     if (selectedDrinkIndex != null) {
-  //       final newDrink = Drink(
-  //         dateTime: _selectedDate,
-  //         drinkType: totalDrinks[selectedDrinkIndex!]["name"],
-  //       );
-
-  //       final box = Hive.box<Drink>('drinksBox');
-  //       box.add(newDrink);
-
-  //       _loadDrinksForDate(_selectedDate);
-
-  //       WidgetsBinding.instance.addPostFrameCallback((_) {
-  //         _scrollController.animateTo(
-  //           _scrollController.position.maxScrollExtent,
-  //           duration: const Duration(milliseconds: 100),
-  //           curve: Curves.easeOut,
-  //         );
-  //       });
-  //       Future.delayed(const Duration(milliseconds: 50), () {
-  //         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-  //       });
-
-  //       _showDrinkSelection = false;
-  //     }
-  //   });
-  // }
 
   void _goToPreviousDay() {
     setState(() {
@@ -225,7 +168,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _showDrinkChangeDialog(int index) async {
+    final box = Hive.box<Drink>('drinksBox');
     final currentDrink = _drinksForSelectedDate[index];
+    final allDrinks = box.values.toList();
+
+    final drinkIndex = allDrinks.indexWhere((drink) =>
+        drink.dateTime == currentDrink['dateTime'] &&
+        drink.drinkType == currentDrink['type']);
 
     await showDialog(
       context: context,
@@ -236,15 +185,17 @@ class _HomePageState extends State<HomePage> {
           note: currentDrink['note'],
         ),
         onDrinkSelected: (newDrink) {
-          final box = Hive.box<Drink>('drinksBox');
-          box.putAt(index, newDrink);
-          _loadDrinksForDate(_selectedDate);
+          if (drinkIndex != -1) {
+            box.putAt(drinkIndex, newDrink);
+            _loadDrinksForDate(_selectedDate);
+          }
         },
         onDeleteDrink: () {
-          final box = Hive.box<Drink>('drinksBox');
-          box.deleteAt(index);
-          _loadDrinksForDate(_selectedDate);
-          Navigator.pop(context);
+          if (drinkIndex != -1) {
+            box.deleteAt(drinkIndex);
+            _loadDrinksForDate(_selectedDate);
+            Navigator.pop(context);
+          }
         },
       ),
     );
@@ -275,6 +226,34 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  List<Map<String, dynamic>> _groupDrinksByNote(
+      List<Map<String, dynamic>> drinks) {
+    Map<String?, List<Map<String, dynamic>>> groupedDrinks = {};
+
+    for (var drink in drinks) {
+      String? note = drink['note'];
+      if (!groupedDrinks.containsKey(note)) {
+        groupedDrinks[note] = [];
+      }
+      groupedDrinks[note]!.add(drink);
+    }
+
+    List<Map<String, dynamic>> result = [];
+    groupedDrinks.forEach((note, drinks) {
+      if (drinks.length == 1) {
+        result.add(drinks.first);
+      } else {
+        result.add({
+          'type': 'group',
+          'drinks': drinks,
+          'note': note,
+        });
+      }
+    });
+
+    return result;
   }
 
   @override
@@ -313,7 +292,7 @@ class _HomePageState extends State<HomePage> {
           ),
           leading: IconButton(
             icon: const Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios,
               size: 40,
               color: Colors.white,
             ),
@@ -322,7 +301,7 @@ class _HomePageState extends State<HomePage> {
           actions: [
             IconButton(
               color: Colors.white,
-              icon: const Icon(Icons.arrow_forward, size: 40),
+              icon: const Icon(Icons.arrow_forward_ios, size: 40),
               onPressed: _selectedDate.isBefore(DateTime(DateTime.now().year,
                       DateTime.now().month, DateTime.now().day))
                   ? _goToNextDay
@@ -338,43 +317,62 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(left: 27.w, top: 1.h),
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    shrinkWrap: true,
-                    itemCount: _drinksForSelectedDate.length,
-                    itemBuilder: (context, index) {
-                      return Center(
-                        child: ListTile(
-                          leading: GestureDetector(
-                            onTap: () => _showDrinkChangeDialog(index),
-                            child: _drinksForSelectedDate[index]['type'] ==
-                                    'drink'
-                                ? Image.asset("assets/png/drink.png")
-                                : _drinksForSelectedDate[index]['type'] ==
-                                        'beer'
-                                    ? Image.asset("assets/png/beer.png")
-                                    : _drinksForSelectedDate[index]['type'] ==
-                                            'wine'
-                                        ? Image.asset("assets/png/wine.png")
-                                        : const SizedBox.shrink(),
-                          ),
-                          title: GestureDetector(
-                            onTap: () => _showTimePicker(index),
-                            child: Text(
-                              _drinksForSelectedDate[index]['time'],
-                              style: const TextStyle(
-                                  fontSize: 20, color: Colors.white),
+                child: GestureDetector(
+                  onHorizontalDragEnd: (DragEndDetails details) {
+                    if (details.primaryVelocity! < 0) {
+                      // Right to left swipe - Show notes
+                      setState(() {
+                        _showNotes = true;
+                      });
+                    } else if (details.primaryVelocity! > 0) {
+                      // Left to right swipe - Hide notes
+                      setState(() {
+                        _showNotes = false;
+                      });
+                    }
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: 27.w,
+                    ),
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      shrinkWrap: true,
+                      itemCount: _drinksForSelectedDate.length,
+                      itemBuilder: (context, index) {
+                        return Center(
+                          child: ListTile(
+                            leading: GestureDetector(
+                              onTap: () => _showDrinkChangeDialog(index),
+                              child: _drinksForSelectedDate[index]['type'] ==
+                                      'drink'
+                                  ? Image.asset("assets/png/drink.png")
+                                  : _drinksForSelectedDate[index]['type'] ==
+                                          'beer'
+                                      ? Image.asset("assets/png/beer.png")
+                                      : _drinksForSelectedDate[index]['type'] ==
+                                              'wine'
+                                          ? Image.asset("assets/png/wine.png")
+                                          : const SizedBox.shrink(),
                             ),
+                            title: GestureDetector(
+                              onTap: () => _showTimePicker(index),
+                              child: Text(
+                                _drinksForSelectedDate[index]['time'],
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.white),
+                              ),
+                            ),
+                            subtitle: _showNotes
+                                ? Text(
+                                    _drinksForSelectedDate[index]['note'] ?? '',
+                                    style: const TextStyle(color: Colors.grey),
+                                  )
+                                : null,
                           ),
-                          subtitle: Text(
-                            _drinksForSelectedDate[index]['note'] ?? '',
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -414,14 +412,6 @@ class _HomePageState extends State<HomePage> {
                                   });
                                 },
                                 child: Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: selectedDrinkIndex == index
-                                          ? Colors.white
-                                          : Colors.transparent,
-                                      width: 0.9.w,
-                                    ),
-                                  ),
                                   child: totalDrinks[index]["image"],
                                 ),
                               ),

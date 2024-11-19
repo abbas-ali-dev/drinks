@@ -160,7 +160,7 @@ class _StatsPageState extends State<StatsPage> {
       appBar: AppBar(
         leading: IconButton(
           color: Colors.white,
-          icon: const Icon(Icons.arrow_back, size: 40),
+          icon: const Icon(Icons.arrow_back_ios, size: 40),
           onPressed: () {
             setState(() {
               if (isAllTime) {
@@ -181,7 +181,7 @@ class _StatsPageState extends State<StatsPage> {
         actions: [
           IconButton(
             color: Colors.white,
-            icon: const Icon(Icons.arrow_forward, size: 40),
+            icon: const Icon(Icons.arrow_forward_ios, size: 40),
             onPressed: () {
               setState(() {
                 if (!isAllTime && selectedYear < DateTime.now().year) {
@@ -220,13 +220,27 @@ class _StatsPageState extends State<StatsPage> {
 
                       return Stack(
                         children: [
-                          if (liquorPercentage > 0)
+                          if (beerPercentage > 0)
                             Positioned(
                               top: 10,
                               left: 10,
                               child: CircleItem(
                                 color: Colors.grey[300]!,
-                                label: 'Liquor',
+                                label: 'Beer',
+                                percentage: '${beerPercentage.toInt()}%',
+                                size: beerPercentage < 50
+                                    ? baseSize * (beerPercentage / 70)
+                                    : baseSize * (beerPercentage / 100),
+                                textColor: Colors.black,
+                              ),
+                            ),
+                          if (liquorPercentage > 0)
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: CircleItem(
+                                color: Colors.grey[300]!,
+                                label: 'liquor',
                                 percentage: '${liquorPercentage.toInt()}%',
                                 size: liquorPercentage < 50
                                     ? baseSize * (liquorPercentage / 70)
@@ -236,8 +250,9 @@ class _StatsPageState extends State<StatsPage> {
                             ),
                           if (winePercentage > 0)
                             Positioned(
-                              top: 10,
-                              right: 10,
+                              bottom: 10,
+                              left: (MediaQuery.of(context).size.width / 2) -
+                                  (baseSize * (winePercentage / 100)) / 1.2,
                               child: CircleItem(
                                 color: Colors.grey[300]!,
                                 label: 'Wine',
@@ -245,21 +260,6 @@ class _StatsPageState extends State<StatsPage> {
                                 size: winePercentage < 50
                                     ? baseSize * (winePercentage / 70)
                                     : baseSize * (winePercentage / 100),
-                                textColor: Colors.black,
-                              ),
-                            ),
-                          if (beerPercentage > 0)
-                            Positioned(
-                              bottom: 10,
-                              left: (MediaQuery.of(context).size.width / 2) -
-                                  (baseSize * (beerPercentage / 100)) / 1.2,
-                              child: CircleItem(
-                                color: Colors.grey[300]!,
-                                label: 'Beer',
-                                percentage: '${beerPercentage.toInt()}%',
-                                size: beerPercentage < 50
-                                    ? baseSize * (beerPercentage / 70)
-                                    : baseSize * (beerPercentage / 100),
                                 textColor: Colors.black,
                               ),
                             ),
@@ -276,12 +276,25 @@ class _StatsPageState extends State<StatsPage> {
                     children: [
                       InfoContainer(
                           label: 'TOTAL DRINKS', value: totalDrinks.toString()),
-                      InfoContainer(
-                          label: 'TOTAL LIQUOR', value: totalLiquor.toString()),
-                      InfoContainer(
-                          label: 'TOTAL WINE', value: totalWine.toString()),
-                      InfoContainer(
-                          label: 'TOTAL BEERS', value: totalBeers.toString()),
+                      ...(() {
+                        List<Map<String, dynamic>> drinkCounts = [
+                          {'label': 'TOTAL LIQUOR', 'value': totalLiquor},
+                          {'label': 'TOTAL WINE', 'value': totalWine},
+                          {'label': 'TOTAL BEERS', 'value': totalBeers},
+                        ];
+
+                        // Sort in descending order based on value
+                        drinkCounts
+                            .sort((a, b) => b['value'].compareTo(a['value']));
+
+                        // Return sorted InfoContainers
+                        return drinkCounts
+                            .map((drink) => InfoContainer(
+                                  label: drink['label'],
+                                  value: drink['value'].toString(),
+                                ))
+                            .toList();
+                      })(),
                       InfoContainer(
                           label: 'DRINK DAYS',
                           value: totalDrinkDays.toString()),
