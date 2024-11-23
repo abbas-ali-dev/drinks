@@ -115,13 +115,13 @@ class _SettingsPageState extends State<SettingsPage> {
                         // Save to Hive:
                         Hive.box('settingsBox').put('timeFormat', newValue);
                       });
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HomePage(),
-                        ),
-                        (route) => false,
-                      );
+                      // Navigator.pushAndRemoveUntil(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => const HomePage(),
+                      //   ),
+                      //   (route) => false,
+                      // );
                     },
                     items: _timeFormats.map((String value) {
                       return DropdownMenuItem<String>(

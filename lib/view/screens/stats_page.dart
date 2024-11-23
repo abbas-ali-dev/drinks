@@ -296,11 +296,17 @@ class _StatsPageState extends State<StatsPage> {
                             .toList();
                       })(),
                       InfoContainer(
-                          label: 'DRINK DAYS',
+                          label:
+                              totalDrinkDays == 1 ? 'DRINK DAY' : 'DRINK DAYS',
                           value: totalDrinkDays.toString()),
                       InfoContainer(
-                          label: 'NON-DRINK DAYS',
-                          value: totalNonDrinkDays.toString()),
+                        label: totalNonDrinkDays == 1
+                            ? 'NON-DRINK DAY'
+                            : 'NON-DRINK DAYS',
+                        value: totalNonDrinkDays <= 0
+                            ? '0'
+                            : totalNonDrinkDays.toString(),
+                      ),
                     ],
                   ),
                   Column(
@@ -319,9 +325,14 @@ class _StatsPageState extends State<StatsPage> {
                       ),
                       InfoContainer(
                           label: 'LONGEST STREAK',
-                          value: '$longestStreak days'),
+                          value: longestStreak == 1
+                              ? '1 day'
+                              : '$longestStreak days'),
                       InfoContainer(
-                          label: 'LONGEST BREAK', value: '$longestBreak days'),
+                          label: 'LONGEST BREAK',
+                          value: longestBreak == 1
+                              ? '1 day'
+                              : '$longestBreak days'),
                       InfoContainer(
                         label: 'EARLIEST DRINK',
                         value: earliestDrinkTime != null

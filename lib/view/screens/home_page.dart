@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   bool _isMenuOpen = false;
   bool _showNotes = false;
+  bool _showDrinksPerHour = false;
 
   DateTime _selectedDate = DateTime.now();
   List<Map<String, dynamic>> _drinksForSelectedDate = [];
@@ -73,6 +74,10 @@ class _HomePageState extends State<HomePage> {
           'note': drink.note,
         };
       }).toList();
+
+      // Sort drinks by time
+      _drinksForSelectedDate.sort((a, b) =>
+          (a['dateTime'] as DateTime).compareTo(b['dateTime'] as DateTime));
     });
   }
 
@@ -228,6 +233,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  String _calculateDrinksPerHour() {
+    if (_drinksForSelectedDate.isEmpty) return '0.0';
+
+    // Check if it's current date
+    if (_selectedDate.year == DateTime.now().year &&
+        _selectedDate.month == DateTime.now().month &&
+        _selectedDate.day == DateTime.now().day) {
+      final firstDrinkTime =
+          _drinksForSelectedDate.first['dateTime'] as DateTime;
+      final lastDrinkTime = _drinksForSelectedDate.last['dateTime'] as DateTime;
+
+      // Calculate time difference in hours for current date
+      final timeDifference = lastDrinkTime.difference(firstDrinkTime).inHours;
+
+      // If time difference is 0 hours, return 1.0 to avoid division by zero
+      if (timeDifference == 0) return '1.0';
+
+      return timeDifference.toStringAsFixed(1);
+    } else {
+      // For past dates, return total drinks
+      return _drinksForSelectedDate.length.toStringAsFixed(1);
+    }
+  }
+
   List<Map<String, dynamic>> _groupDrinksByNote(
       List<Map<String, dynamic>> drinks) {
     Map<String?, List<Map<String, dynamic>>> groupedDrinks = {};
@@ -366,7 +395,11 @@ class _HomePageState extends State<HomePage> {
                             subtitle: _showNotes
                                 ? Text(
                                     _drinksForSelectedDate[index]['note'] ?? '',
-                                    style: const TextStyle(color: Colors.grey),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16,
+                                    ),
                                   )
                                 : null,
                           ),
@@ -381,14 +414,23 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.white,
                 height: 3,
               ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Text(
-                  '${_drinksForSelectedDate.length} Drinks',
-                  style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _showDrinksPerHour = !_showDrinksPerHour;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(
+                    _showDrinksPerHour
+                        ? '${_calculateDrinksPerHour()} Drinks/Hour'
+                        : '${_drinksForSelectedDate.length} Drinks',
+                    style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
                 ),
               ),
               AnimatedSwitcher(

@@ -186,32 +186,32 @@ class _MonthlyPageState extends State<MonthlyPage> {
       appBar: AppBar(
         leading: IconButton(
           color: Colors.white,
-          icon: const Icon(
-            Icons.arrow_back,
-            size: 40,
-          ),
+          icon: const Icon(Icons.arrow_back, size: 40),
           onPressed: () {
             _goToPreviousMonth();
           },
         ),
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _currentDate.monthName(),
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 23,
-                  fontWeight: FontWeight.bold),
-            ),
-            Text(
-              '${_currentDate.year}',
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 23,
-                  fontWeight: FontWeight.bold),
-            ),
-          ],
+        title: GestureDetector(
+          onTap: _selectMonthYear,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _currentDate.monthName(),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 23,
+                    fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '${_currentDate.year}',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 23,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -441,14 +441,14 @@ class _MonthlyPageState extends State<MonthlyPage> {
                     '${i == 0 ? totalLiquor : i == 1 ? totalWine : totalBeers} ',
                     style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 30,
+                        fontSize: 25,
                         fontWeight: FontWeight.bold),
                   ),
                   Text(
                     drinkIcons[i],
                     style: TextStyle(
                         color: Colors.white,
-                        fontSize: i == 1 ? 33 : 30,
+                        fontSize: i == 1 ? 28 : 25,
                         fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(
@@ -460,7 +460,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
               "=  ",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 30,
+                fontSize: 25,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -475,7 +475,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
                 '$totalDrinks',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 30,
+                  fontSize: 25,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -486,5 +486,59 @@ class _MonthlyPageState extends State<MonthlyPage> {
         const Divider(color: Colors.white, thickness: 2),
       ],
     );
+  }
+
+// Add this method in _MonthlyPageState
+  Future<void> _selectMonthYear() async {
+    final DateTime? picked = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.white,
+              onPrimary: Colors.black,
+              surface: Colors.black,
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: Colors.black,
+          ),
+          child: AlertDialog(
+            backgroundColor: Colors.black,
+            title: const Text(
+              'Select Month and Year',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
+            ),
+            content: SizedBox(
+              height: 300,
+              width: 300,
+              child: CalendarDatePicker(
+                initialDate: _currentDate,
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+                initialCalendarMode: DatePickerMode.year,
+                onDateChanged: (DateTime value) {
+                  setState(() {
+                    _currentDate = value;
+                    _calculateMonthlyDrinkCounts(_currentDate);
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _currentDate = picked;
+        _calculateMonthlyDrinkCounts(_currentDate);
+      });
+    }
   }
 }
