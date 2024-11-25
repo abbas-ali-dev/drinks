@@ -149,13 +149,6 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    double beerPercentage =
-        totalDrinks > 0 ? (totalBeers / totalDrinks) * 100 : 0;
-    double liquorPercentage =
-        totalDrinks > 0 ? (totalLiquor / totalDrinks) * 100 : 0;
-    double winePercentage =
-        totalDrinks > 0 ? (totalWine / totalDrinks) * 100 : 0;
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -165,9 +158,12 @@ class _StatsPageState extends State<StatsPage> {
             setState(() {
               if (isAllTime) {
                 isAllTime = false;
-                selectedYear = DateTime.now().year;
+                selectedYear = _getAvailableYears().last;
               } else {
-                selectedYear--;
+                int currentIndex = _getAvailableYears().indexOf(selectedYear);
+                if (currentIndex > 0) {
+                  selectedYear = _getAvailableYears()[currentIndex - 1];
+                }
               }
               _calculateStats(isAllTime ? null : selectedYear);
             });
@@ -184,12 +180,15 @@ class _StatsPageState extends State<StatsPage> {
             icon: const Icon(Icons.arrow_forward_ios, size: 40),
             onPressed: () {
               setState(() {
-                if (!isAllTime && selectedYear < DateTime.now().year) {
-                  selectedYear++;
-                  _calculateStats(selectedYear);
-                } else if (!isAllTime && selectedYear == DateTime.now().year) {
-                  isAllTime = true;
-                  _calculateStats(null);
+                if (!isAllTime) {
+                  int currentIndex = _getAvailableYears().indexOf(selectedYear);
+                  if (currentIndex < _getAvailableYears().length - 1) {
+                    selectedYear = _getAvailableYears()[currentIndex + 1];
+                    _calculateStats(selectedYear);
+                  } else {
+                    isAllTime = true;
+                    _calculateStats(null);
+                  }
                 }
               });
             },
@@ -199,161 +198,127 @@ class _StatsPageState extends State<StatsPage> {
         backgroundColor: Colors.grey[800],
       ),
       backgroundColor: Colors.black,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              if (beerPercentage == 0 &&
-                  liquorPercentage == 0 &&
-                  winePercentage == 0)
-                SizedBox(
-                  height: 3.h,
-                )
-              else
-                SizedBox(
-                  height: 30.h,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      double baseSize = 200;
-
-                      return Stack(
-                        children: [
-                          if (beerPercentage > 0)
-                            Positioned(
-                              top: 10,
-                              left: 10,
-                              child: CircleItem(
-                                color: Colors.grey[300]!,
-                                label: 'Beer',
-                                percentage: '${beerPercentage.toInt()}%',
-                                size: beerPercentage < 50
-                                    ? baseSize * (beerPercentage / 70)
-                                    : baseSize * (beerPercentage / 100),
-                                textColor: Colors.black,
-                              ),
-                            ),
-                          if (liquorPercentage > 0)
-                            Positioned(
-                              top: 10,
-                              right: 10,
-                              child: CircleItem(
-                                color: Colors.grey[300]!,
-                                label: 'liquor',
-                                percentage: '${liquorPercentage.toInt()}%',
-                                size: liquorPercentage < 50
-                                    ? baseSize * (liquorPercentage / 70)
-                                    : baseSize * (liquorPercentage / 100),
-                                textColor: Colors.black,
-                              ),
-                            ),
-                          if (winePercentage > 0)
-                            Positioned(
-                              bottom: 10,
-                              left: (MediaQuery.of(context).size.width / 2) -
-                                  (baseSize * (winePercentage / 100)) / 1.2,
-                              child: CircleItem(
-                                color: Colors.grey[300]!,
-                                label: 'Wine',
-                                percentage: '${winePercentage.toInt()}%',
-                                size: winePercentage < 50
-                                    ? baseSize * (winePercentage / 70)
-                                    : baseSize * (winePercentage / 100),
-                                textColor: Colors.black,
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  child: InfoContainer(
+                    label: 'TOTAL DRINKS',
+                    value: totalDrinks.toString(),
                   ),
                 ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    children: [
-                      InfoContainer(
-                          label: 'TOTAL DRINKS', value: totalDrinks.toString()),
-                      ...(() {
-                        List<Map<String, dynamic>> drinkCounts = [
-                          {'label': 'TOTAL LIQUOR', 'value': totalLiquor},
-                          {'label': 'TOTAL WINE', 'value': totalWine},
-                          {'label': 'TOTAL BEERS', 'value': totalBeers},
-                        ];
+                ...(() {
+                  List<Map<String, dynamic>> drinkCounts = [
+                    {'label': 'TOTAL LIQUOR', 'value': totalLiquor},
+                    {'label': 'TOTAL WINE', 'value': totalWine},
+                    {'label': 'TOTAL BEERS', 'value': totalBeers},
+                  ];
 
-                        // Sort in descending order based on value
-                        drinkCounts
-                            .sort((a, b) => b['value'].compareTo(a['value']));
+                  // Sort in descending order based on value
+                  drinkCounts.sort((a, b) => b['value'].compareTo(a['value']));
 
-                        // Return sorted InfoContainers
-                        return drinkCounts
-                            .map((drink) => InfoContainer(
-                                  label: drink['label'],
-                                  value: drink['value'].toString(),
-                                ))
-                            .toList();
-                      })(),
-                      InfoContainer(
-                          label:
-                              totalDrinkDays == 1 ? 'DRINK DAY' : 'DRINK DAYS',
-                          value: totalDrinkDays.toString()),
-                      InfoContainer(
-                        label: totalNonDrinkDays == 1
-                            ? 'NON-DRINK DAY'
-                            : 'NON-DRINK DAYS',
-                        value: totalNonDrinkDays <= 0
-                            ? '0'
-                            : totalNonDrinkDays.toString(),
-                      ),
-                    ],
+                  // Return sorted InfoContainers
+                  return drinkCounts
+                      .map((drink) => Expanded(
+                            child: InfoContainer(
+                              label: drink['label'],
+                              value: drink['value'].toString(),
+                            ),
+                          ))
+                      .toList();
+                })(),
+                Expanded(
+                  child: InfoContainer(
+                    label: totalDrinkDays == 1 ? 'DRINK DAY' : 'DRINK DAYS',
+                    value: totalDrinkDays.toString(),
                   ),
-                  Column(
-                    children: [
-                      InfoContainer(
-                        label: 'LAST DRINK',
-                        value: lastDrinkDate != null
-                            ? _calculateDaysAgo(lastDrinkDate!)
-                            : 'N/A',
-                      ),
-                      InfoContainer(
-                        label: 'FIRST DRINK',
-                        value: firstDrinkDate != null
-                            ? _calculateDaysAgo(firstDrinkDate!)
-                            : 'N/A',
-                      ),
-                      InfoContainer(
-                          label: 'LONGEST STREAK',
-                          value: longestStreak == 1
-                              ? '1 day'
-                              : '$longestStreak days'),
-                      InfoContainer(
-                          label: 'LONGEST BREAK',
-                          value: longestBreak == 1
-                              ? '1 day'
-                              : '$longestBreak days'),
-                      InfoContainer(
-                        label: 'EARLIEST DRINK',
-                        value: earliestDrinkTime != null
-                            ? DateFormat.jm().format(earliestDrinkTime!)
-                            : 'N/A',
-                      ),
-                      InfoContainer(
-                        label: 'LATEST DRINK',
-                        value: latestDrinkTime != null
-                            ? DateFormat.jm().format(latestDrinkTime!)
-                            : 'N/A',
-                      ),
-                    ],
+                ),
+                Expanded(
+                  child: InfoContainer(
+                    label: totalNonDrinkDays == 1
+                        ? 'NON-DRINK DAY'
+                        : 'NON-DRINK DAYS',
+                    value: totalNonDrinkDays <= 0
+                        ? '0'
+                        : totalNonDrinkDays.toString(),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Expanded(
+                  child: InfoContainer(
+                    label: 'LAST DRINK',
+                    value: lastDrinkDate != null
+                        ? _calculateDaysAgo(lastDrinkDate!)
+                        : 'N/A',
+                  ),
+                ),
+                Expanded(
+                  child: InfoContainer(
+                    label: 'FIRST DRINK',
+                    value: firstDrinkDate != null
+                        ? _calculateDaysAgo(firstDrinkDate!)
+                        : 'N/A',
+                  ),
+                ),
+                Expanded(
+                  child: InfoContainer(
+                    label: 'LONGEST STREAK',
+                    value: longestStreak == 1 ? '1 day' : '$longestStreak days',
+                  ),
+                ),
+                Expanded(
+                  child: InfoContainer(
+                    label: 'LONGEST BREAK',
+                    value: longestBreak == 1 ? '1 day' : '$longestBreak days',
+                  ),
+                ),
+                Expanded(
+                  child: InfoContainer(
+                    label: 'EARLIEST DRINK',
+                    value: earliestDrinkTime != null
+                        ? DateFormat.jm().format(earliestDrinkTime!)
+                        : 'N/A',
+                  ),
+                ),
+                Expanded(
+                  child: InfoContainer(
+                    label: 'LATEST DRINK',
+                    value: latestDrinkTime != null
+                        ? DateFormat.jm().format(latestDrinkTime!)
+                        : 'N/A',
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: const CustomBottumNavigationBar(),
     );
+  }
+
+  List<int> _getAvailableYears() {
+    Set<int> years = {};
+
+    // Add years from logged drinks
+    for (var drink in _drinksBox.values) {
+      years.add(drink.dateTime.year);
+    }
+
+    // Add current year if not already present
+    years.add(DateTime.now().year);
+
+    // Convert to sorted list
+    List<int> yearsList = years.toList()..sort();
+
+    return yearsList;
   }
 }

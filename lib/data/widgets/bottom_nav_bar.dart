@@ -161,7 +161,7 @@ void shareContent(BuildContext context) async {
   BranchUniversalObject buo = BranchUniversalObject(
     canonicalIdentifier: 'flutter/branch',
     title: 'Happy Hour App',
-    contentDescription: 'Check out my monthly drinks!',
+    // contentDescription: 'Check out my monthly drinks!',
     publiclyIndex: true,
     locallyIndex: true,
   );
@@ -179,6 +179,8 @@ void shareContent(BuildContext context) async {
 
   if (response.success) {
     content += "\n${response.result}";
-    Share.share(content, subject: 'My Monthly Happy Hour Summary!');
+    Share.share(
+      content,
+    );
   }
 }

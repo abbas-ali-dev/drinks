@@ -237,60 +237,54 @@ class _MonthlyPageState extends State<MonthlyPage> {
 
   Widget _buildMonthView(DateTime monthDate) {
     int daysInMonth = DateTime(monthDate.year, monthDate.month + 1, 0).day;
-
-    // Calculate daily drink counts for the current month
     Map<int, int> dailyDrinkCounts = _calculateDailyDrinkCounts(monthDate);
-
-    // Calculate the offset for the first day of the month
     int firstDayWeekday = DateTime(monthDate.year, monthDate.month, 1).weekday;
-    int offset = firstDayWeekday - 0; // Adjust for 0-based indexing
+    int offset = firstDayWeekday - 0;
 
-    return SizedBox(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            //  doublePrevious Month Section
-            _buildMonthSummarySection(
-              monthName: doublepreviousMonthName,
-              monthYear: doublepreviousMonthYear,
-              totalDrinks: totalDrinksForDoublePreviousMonth,
-              totalBeers: totalBeersForDoublePreviousMonth,
-              totalLiquor: totalLiquorForDoublePreviousMonth,
-              totalWine: totalWineForDoublePreviousMonth,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
             ),
-
-            // Next Month Section
-            _buildMonthSummarySection(
-              monthName: previousMonthName,
-              monthYear: previousMonthYear,
-              totalDrinks: totalDrinksForPreviousMonth,
-              totalBeers: totalBeersForPreviousMonth,
-              totalLiquor: totalLiquorForPreviousMonth,
-              totalWine: totalWineForPreviousMonth,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildMonthSummarySection(
+                  monthName: doublepreviousMonthName,
+                  monthYear: doublepreviousMonthYear,
+                  totalDrinks: totalDrinksForDoublePreviousMonth,
+                  totalBeers: totalBeersForDoublePreviousMonth,
+                  totalLiquor: totalLiquorForDoublePreviousMonth,
+                  totalWine: totalWineForDoublePreviousMonth,
+                ),
+                _buildMonthSummarySection(
+                  monthName: previousMonthName,
+                  monthYear: previousMonthYear,
+                  totalDrinks: totalDrinksForPreviousMonth,
+                  totalBeers: totalBeersForPreviousMonth,
+                  totalLiquor: totalLiquorForPreviousMonth,
+                  totalWine: totalWineForPreviousMonth,
+                ),
+                _buildMonthSummarySection(
+                  monthName: monthDate.monthName(),
+                  monthYear: monthDate.year,
+                  totalDrinks: totalDrinksForMonth,
+                  totalBeers: totalBeersForMonth,
+                  totalLiquor: totalLiquorForMonth,
+                  totalWine: totalWineForMonth,
+                  showCalendar: true,
+                  dailyDrinkCounts: dailyDrinkCounts,
+                  daysInMonth: daysInMonth,
+                  offset: offset,
+                  monthDate: monthDate,
+                ),
+              ],
             ),
-
-            // Current Month Section
-            _buildMonthSummarySection(
-              monthName: monthDate.monthName(),
-              monthYear: monthDate.year,
-              totalDrinks: totalDrinksForMonth,
-              totalBeers: totalBeersForMonth,
-              totalLiquor: totalLiquorForMonth,
-              totalWine: totalWineForMonth,
-              showCalendar: true,
-              dailyDrinkCounts: dailyDrinkCounts,
-              daysInMonth: daysInMonth,
-              offset: offset,
-              monthDate: monthDate,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -334,12 +328,18 @@ class _MonthlyPageState extends State<MonthlyPage> {
                   Text('Wed',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.white)),
-                  Text('Thu',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.white)),
-                  Text('Fri',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.white)),
+                  Padding(
+                    padding: EdgeInsets.only(right: 5),
+                    child: Text('Thu',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(right: 8),
+                    child: Text('Fri',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
                   Text('Sat',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.white)),
@@ -398,7 +398,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
                                 children: [
                                   dayDrinkCount > 0
                                       ? Container(
-                                          padding: const EdgeInsets.all(8.0),
+                                          padding: const EdgeInsets.all(5.0),
                                           decoration: const BoxDecoration(
                                             color: Colors.white,
                                             shape: BoxShape.circle,
@@ -411,7 +411,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
                                           ),
                                         )
                                       : Container(
-                                          padding: const EdgeInsets.all(8.0),
+                                          padding: const EdgeInsets.all(2.0),
                                           child: Text(
                                             '${day.day}',
                                             style: const TextStyle(

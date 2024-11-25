@@ -52,15 +52,15 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
       backgroundColor: Colors.grey[800],
       content: SizedBox(
         height: 15.h,
-        width: 40.w,
+        width: 10.w,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _buildHourScroller(),
-            const Text(' : ',
+            Expanded(child: _buildHourScroller()),
+            const Text(':  ',
                 style: TextStyle(fontSize: 30, color: Colors.white)),
-            _buildMinuteScroller(),
+            Expanded(child: _buildMinuteScroller()),
             // Conditionally display AM/PM based on time format
             if (selectedTimeFormatGlobally == '12 Hour')
               Column(
@@ -119,13 +119,14 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
 
             // Pass the updated _selectedTime to the callback
             widget.onTimeSelected(_selectedTime);
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const HomePage(),
-              ),
-              (route) => false,
-            );
+            Navigator.pop(context);
+            // Navigator.pushAndRemoveUntil(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (context) => const HomePage(),
+            //   ),
+            //   (route) => false,
+            // );
           },
           child: const Text('OK', style: TextStyle(color: Colors.white)),
         ),
@@ -134,50 +135,60 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
   }
 
   Widget _buildHourScroller() {
-    return SizedBox(
-      width: selectedTimeFormatGlobally == '24 Hour' ? 80 : 60,
-      height: 150,
-      child: ListWheelScrollView.useDelegate(
-        controller: _hourController,
-        itemExtent: 40,
-        perspective: 0.005,
-        diameterRatio: 1,
-        onSelectedItemChanged: (index) {
-          setState(() {
-            int newHour = selectedTimeFormatGlobally == '24 Hour'
-                ? index
-                : (index + (_selectedTime.hour >= 12 ? 12 : 0)) % 24;
+    return Padding(
+      padding: EdgeInsets.only(
+          right: selectedTimeFormatGlobally == '24 Hour' ? 10 : 50),
+      child: SizedBox(
+        width: selectedTimeFormatGlobally == '24 Hour' ? 80 : 60,
+        height: 150,
+        child: ListWheelScrollView.useDelegate(
+          controller: _hourController,
+          itemExtent: 40,
+          perspective: 0.005,
+          diameterRatio: 1,
+          physics: const FixedExtentScrollPhysics(
+              parent: BouncingScrollPhysics(
+                  decelerationRate: ScrollDecelerationRate.fast)),
+          onSelectedItemChanged: (index) {
+            setState(() {
+              int newHour = selectedTimeFormatGlobally == '24 Hour'
+                  ? index
+                  : (index + (_selectedTime.hour >= 12 ? 12 : 0)) % 24;
 
-            // Prevent selecting future hours
-            if (newHour > DateTime.now().hour &&
-                _selectedTime.day == DateTime.now().day) {
-              newHour = DateTime.now().hour;
-            }
+              // Prevent selecting future hours
+              if (newHour > DateTime.now().hour &&
+                  _selectedTime.day == DateTime.now().day) {
+                newHour = DateTime.now().hour;
+              }
 
-            _selectedTime = _selectedTime.copyWith(hour: newHour);
+              _selectedTime = _selectedTime.copyWith(hour: newHour);
 
-            // Adjust scrolling for 24-hour format
-            _hourController.animateToItem(
-              selectedTimeFormatGlobally == '24 Hour' ? newHour : newHour % 12,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          });
-        },
-        childDelegate: ListWheelChildBuilderDelegate(
-          childCount: selectedTimeFormatGlobally == '24 Hour' ? 24 : 12,
-          builder: (context, index) {
-            int displayHour =
-                selectedTimeFormatGlobally == '24 Hour' ? index : (index) % 12;
-            displayHour = displayHour == 0 ? 12 : displayHour;
-
-            return Center(
-              child: Text(
-                '$displayHour',
-                style: const TextStyle(fontSize: 23, color: Colors.white),
-              ),
-            );
+              // Adjust scrolling for 24-hour format
+              _hourController.animateToItem(
+                selectedTimeFormatGlobally == '24 Hour'
+                    ? newHour
+                    : newHour % 12,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            });
           },
+          childDelegate: ListWheelChildBuilderDelegate(
+            childCount: selectedTimeFormatGlobally == '24 Hour' ? 24 : 12,
+            builder: (context, index) {
+              int displayHour = selectedTimeFormatGlobally == '24 Hour'
+                  ? index
+                  : (index) % 12;
+              displayHour = displayHour == 0 ? 12 : displayHour;
+
+              return Center(
+                child: Text(
+                  '$displayHour',
+                  style: const TextStyle(fontSize: 23, color: Colors.white),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -192,22 +203,18 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
         itemExtent: 40,
         perspective: 0.005,
         diameterRatio: 1,
+        physics: const FixedExtentScrollPhysics(
+          parent: BouncingScrollPhysics(
+              decelerationRate: ScrollDecelerationRate.fast),
+        ),
         onSelectedItemChanged: (index) {
           setState(() {
             int newMinute = index;
-
-            // Prevent selecting future minutes if the hour is the current hour
-            if (_selectedTime.hour == DateTime.now().hour &&
-                newMinute > DateTime.now().minute &&
-                _selectedTime.day == DateTime.now().day) {
-              newMinute = DateTime.now().minute;
-            }
-
             _selectedTime = _selectedTime.copyWith(minute: newMinute);
             _minuteController.animateToItem(
               newMinute,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.easeOut,
             );
           });
         },

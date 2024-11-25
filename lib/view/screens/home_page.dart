@@ -151,7 +151,22 @@ class _HomePageState extends State<HomePage> {
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.white,
+              onPrimary: Colors.black,
+              surface: Colors.black,
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: Colors.black,
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
@@ -207,7 +222,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _showTimePicker(int index) async {
-    final TimeOfDay? pickedTime = await showDialog<TimeOfDay>(
+    await showDialog<TimeOfDay>(
       context: context,
       builder: (BuildContext context) {
         DateTime? dateTime = _drinksForSelectedDate[index]['dateTime'];
@@ -216,17 +231,31 @@ class _HomePageState extends State<HomePage> {
           initialTime: dateTime ?? DateTime.now(),
           onTimeSelected: (DateTime newTime) {
             final box = Hive.box<Drink>('drinksBox');
-            final oldDrink = box.getAt(index);
-            if (oldDrink != null) {
-              final newDrink = Drink(
-                dateTime: newTime,
-                drinkType: oldDrink.drinkType,
-                note: oldDrink.note,
-              );
-              box.putAt(index, newDrink);
+            final allDrinks = box.values.toList();
+            final currentDrink = _drinksForSelectedDate[index];
+
+            final drinkIndex = allDrinks.indexWhere((drink) =>
+                drink.dateTime == currentDrink['dateTime'] &&
+                drink.drinkType == currentDrink['type']);
+
+            if (drinkIndex != -1) {
+              final oldDrink = box.getAt(drinkIndex);
+              if (oldDrink != null) {
+                final newDrink = Drink(
+                  dateTime: DateTime(
+                    _selectedDate.year,
+                    _selectedDate.month,
+                    _selectedDate.day,
+                    newTime.hour,
+                    newTime.minute,
+                  ),
+                  drinkType: oldDrink.drinkType,
+                  note: oldDrink.note,
+                );
+                box.putAt(drinkIndex, newDrink);
+                _loadDrinksForDate(_selectedDate);
+              }
             }
-            _loadDrinksForDate(_selectedDate);
-            Navigator.of(context).pop();
           },
         );
       },
@@ -338,7 +367,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
           centerTitle: true,
-          backgroundColor: Colors.grey[800],
+          backgroundColor: const Color.fromARGB(255, 53, 53, 53),
         ),
         body: Center(
           child: Column(
@@ -362,7 +391,8 @@ class _HomePageState extends State<HomePage> {
                   },
                   child: Padding(
                     padding: EdgeInsets.only(
-                      left: 27.w,
+                      left:
+                          selectedTimeFormatGlobally == '24 Hour' ? 28.w : 25.w,
                     ),
                     child: ListView.builder(
                       controller: _scrollController,
@@ -388,6 +418,8 @@ class _HomePageState extends State<HomePage> {
                               onTap: () => _showTimePicker(index),
                               child: Text(
                                 _drinksForSelectedDate[index]['time'],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                     fontSize: 20, color: Colors.white),
                               ),
@@ -579,7 +611,7 @@ class _HomePageState extends State<HomePage> {
     BranchUniversalObject buo = BranchUniversalObject(
       canonicalIdentifier: 'flutter/branch',
       title: 'Happy Hour App',
-      contentDescription: 'Check out my cool drinks!',
+      // contentDescription: 'Happy Hour App',
       publiclyIndex: true,
       locallyIndex: true,
     );
@@ -602,7 +634,9 @@ class _HomePageState extends State<HomePage> {
       content += generatedLink; // Add the link to the content
 
       // 4. Share the content
-      Share.share(content, subject: 'Check out my Happy Hour!');
+      Share.share(
+        content,
+      );
     } else {
       print('Error: ${response.errorMessage}');
     }

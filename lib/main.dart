@@ -12,6 +12,16 @@ import 'package:intl/date_symbol_data_local.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Branch.io
+  // FlutterBranchSdk.initSession().listen((deepLinkData) {
+  //   print('Deep link data: $deepLinkData');
+  // });
+  await FlutterBranchSdk.init(
+    // useTestKey: false,
+    enableLogging: true,
+  );
+  FlutterBranchSdk.validateSDKIntegration();
+
   await initializeDateFormatting(); // Initialize date formatting
   Intl.defaultLocale = 'en_US'; // Set the default locale to US English
 
@@ -24,11 +34,6 @@ void main() async {
   // Open the Hive box (you can name it anything you like)
   await Hive.openBox<Drink>('drinksBox');
   await Hive.openBox('settingsBox'); // Open the settings box
-
-  // Initialize Branch.io
-  FlutterBranchSdk.initSession().listen((deepLinkData) {
-    print('Deep link data: $deepLinkData');
-  });
 
   runApp(const MainApp());
 }
