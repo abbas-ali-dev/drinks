@@ -111,7 +111,8 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
     BranchResponse response = await FlutterBranchSdk.getShortUrl(
       buo: buo,
       linkProperties: linkProperties,
-    ); // if (response.success) {
+    );
+    // if (response.success) {
     //   final generatedLink = response.result;
     //   content += generatedLink;
     //   Share.share(content);
