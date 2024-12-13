@@ -55,12 +55,34 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Helper function to parse cutoff time
+  int getCutoffHour() {
+    String timeStr = selectedCutoffTimeGlobally;
+    List<String> timeParts = timeStr.split(':');
+    return int.parse(timeParts[0]);
+  }
+
+  int getCutoffMinutes() {
+    String timeStr = selectedCutoffTimeGlobally;
+    List<String> timeParts = timeStr.split(':');
+    // Extract just the minutes by removing AM/PM and spaces
+    String minuteStr = timeParts[1].split(' ')[0];
+    return int.parse(minuteStr);
+  }
+
   void _loadDrinksForDate(DateTime date) {
     final box = Hive.box<Drink>('drinksBox');
+
+    int cutoffHour = getCutoffHour();
+    int cutoffMinutes = getCutoffMinutes();
+
+    DateTime startDateTime =
+        DateTime(date.year, date.month, date.day, cutoffHour, cutoffMinutes);
+    DateTime endDateTime = startDateTime.add(const Duration(days: 1));
+
     final drinksFromHive = box.values.where((drink) {
-      return drink.dateTime.year == date.year &&
-          drink.dateTime.month == date.month &&
-          drink.dateTime.day == date.day;
+      return drink.dateTime.isAfter(startDateTime) &&
+          drink.dateTime.isBefore(endDateTime);
     }).toList();
 
     setState(() {
@@ -75,7 +97,6 @@ class _HomePageState extends State<HomePage> {
         };
       }).toList();
 
-      // Sort drinks by time
       _drinksForSelectedDate.sort((a, b) =>
           (a['dateTime'] as DateTime).compareTo(b['dateTime'] as DateTime));
     });
@@ -84,27 +105,31 @@ class _HomePageState extends State<HomePage> {
   void _addDrink() {
     setState(() {
       if (selectedDrinkIndex != null) {
+        DateTime now = DateTime.now();
         DateTime drinkDateTime;
 
-        if (_selectedDate.year == DateTime.now().year &&
-            _selectedDate.month == DateTime.now().month &&
-            _selectedDate.day == DateTime.now().day) {
-          drinkDateTime = DateTime.now();
+        int cutoffHour = getCutoffHour();
+        int cutoffMinutes = getCutoffMinutes();
+
+        // Get today's cutoff time using the global setting
+        DateTime todayCutoff = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          cutoffHour,
+          cutoffMinutes,
+        );
+
+        if (now.isBefore(todayCutoff)) {
+          drinkDateTime = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            now.hour,
+            now.minute,
+          );
         } else {
-          final drinksForDay = _drinksForSelectedDate;
-          if (drinksForDay.isEmpty) {
-            drinkDateTime = DateTime(
-              _selectedDate.year,
-              _selectedDate.month,
-              _selectedDate.day,
-              18,
-              0,
-            );
-          } else {
-            final lastDrink = drinksForDay.last;
-            final lastDrinkTime = lastDrink['dateTime'] as DateTime;
-            drinkDateTime = lastDrinkTime.add(const Duration(hours: 1));
-          }
+          drinkDateTime = now;
         }
 
         final newDrink = Drink(
@@ -114,7 +139,11 @@ class _HomePageState extends State<HomePage> {
 
         final box = Hive.box<Drink>('drinksBox');
         box.add(newDrink);
-        _loadDrinksForDate(_selectedDate);
+
+        // Load drinks for the correct date
+        _loadDrinksForDate(drinkDateTime);
+        _selectedDate = DateTime(
+            drinkDateTime.year, drinkDateTime.month, drinkDateTime.day);
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _scrollController.animateTo(

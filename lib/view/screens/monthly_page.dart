@@ -1,5 +1,6 @@
 import 'package:drinks/data/enums/month_names.dart';
 import 'package:drinks/data/widgets/bottom_nav_bar.dart';
+import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/home_page.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +67,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
 
   void _calculateMonthlyDrinkCounts(DateTime monthDate) {
     // Reset counts for all months
+
     _resetDrinkCounts();
 
     // Calculate for previous, current, and next months
@@ -152,13 +154,65 @@ class _MonthlyPageState extends State<MonthlyPage> {
     }
   }
 
+  // Map<int, int> _calculateDailyDrinkCounts(DateTime monthDate) {
+  //   Map<int, int> dailyCounts = {};
+
+  //   for (var drink in _drinksBox.values) {
+  //     if (drink.dateTime.year == monthDate.year &&
+  //         drink.dateTime.month == monthDate.month) {
+  //       int day = drink.dateTime.day;
+  //       dailyCounts[day] = (dailyCounts[day] ?? 0) + 1;
+  //     }
+  //   }
+
+  //   return dailyCounts;
+  // }
+
+  // Helper functions to get cutoff time
+  int getCutoffHour() {
+    String timeStr = selectedCutoffTimeGlobally;
+    List<String> timeParts = timeStr.split(':');
+    return int.parse(timeParts[0]);
+  }
+
+  int getCutoffMinutes() {
+    String timeStr = selectedCutoffTimeGlobally;
+    List<String> timeParts = timeStr.split(':');
+    String minuteStr = timeParts[1].split(' ')[0];
+    return int.parse(minuteStr);
+  }
+
   Map<int, int> _calculateDailyDrinkCounts(DateTime monthDate) {
     Map<int, int> dailyCounts = {};
 
+    // Get cutoff time from global settings
+    int cutoffHour = getCutoffHour();
+    int cutoffMinutes = getCutoffMinutes();
+
     for (var drink in _drinksBox.values) {
-      if (drink.dateTime.year == monthDate.year &&
-          drink.dateTime.month == monthDate.month) {
-        int day = drink.dateTime.day;
+      // Get the cutoff datetime for the drink's date
+      DateTime drinkDate = drink.dateTime;
+      DateTime cutoffTime = DateTime(
+        drinkDate.year,
+        drinkDate.month,
+        drinkDate.day,
+        cutoffHour,
+        cutoffMinutes,
+      );
+
+      // Adjust the date based on cutoff time
+      DateTime adjustedDate;
+      if (drinkDate.isBefore(cutoffTime)) {
+        // If drink is before cutoff, it belongs to previous day
+        adjustedDate = drinkDate.subtract(const Duration(days: 1));
+      } else {
+        adjustedDate = drinkDate;
+      }
+
+      // Only count if the adjusted date is in the selected month
+      if (adjustedDate.year == monthDate.year &&
+          adjustedDate.month == monthDate.month) {
+        int day = adjustedDate.day;
         dailyCounts[day] = (dailyCounts[day] ?? 0) + 1;
       }
     }

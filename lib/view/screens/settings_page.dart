@@ -17,8 +17,6 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final List<String> _timeFormats = ['12 Hour', '24 Hour'];
   final List<String> _cutoffTimes = [
-    '12:00 AM',
-    '12:30 AM',
     '1:00 AM',
     '1:30 AM',
     '2:00 AM',

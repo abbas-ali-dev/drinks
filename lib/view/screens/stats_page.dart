@@ -1,11 +1,10 @@
-import 'package:drinks/data/widgets/circle_items.dart';
 import 'package:drinks/data/widgets/info_container.dart';
 import 'package:drinks/data/widgets/bottom_nav_bar.dart';
+import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
-import 'package:sizer/sizer.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -81,20 +80,36 @@ class _StatsPageState extends State<StatsPage> {
         } else if (drink.drinkType == 'wine') {
           totalWine++;
         }
-
+        // Adjust the date based on cutoff time
+        DateTime adjustedDate = _adjustDateByCutoff(drink.dateTime);
         DateTime dateKey = DateTime(
-          drink.dateTime.year,
-          drink.dateTime.month,
-          drink.dateTime.day,
+          adjustedDate.year,
+          adjustedDate.month,
+          adjustedDate.day,
         );
         drinkDays[dateKey] = true;
-
-        if (drink.dateTime.isBefore(earliestDrinkTime!)) {
+        // Update earliest/latest drink times using adjusted date
+        if (earliestDrinkTime == null ||
+            adjustedDate.isBefore(earliestDrinkTime!)) {
           earliestDrinkTime = drink.dateTime;
         }
-        if (drink.dateTime.isAfter(latestDrinkTime!)) {
+        if (latestDrinkTime == null || adjustedDate.isAfter(latestDrinkTime!)) {
           latestDrinkTime = drink.dateTime;
         }
+
+        // DateTime dateKey = DateTime(
+        //   drink.dateTime.year,
+        //   drink.dateTime.month,
+        //   drink.dateTime.day,
+        // );
+        // drinkDays[dateKey] = true;
+
+        // if (drink.dateTime.isBefore(earliestDrinkTime!)) {
+        //   earliestDrinkTime = drink.dateTime;
+        // }
+        // if (drink.dateTime.isAfter(latestDrinkTime!)) {
+        //   latestDrinkTime = drink.dateTime;
+        // }
       }
 
       // Calculate longest streak
@@ -321,4 +336,36 @@ class _StatsPageState extends State<StatsPage> {
 
     return yearsList;
   }
+}
+
+// Add these helper methods at the top of the class
+int getCutoffHour() {
+  String timeStr = selectedCutoffTimeGlobally;
+  List<String> timeParts = timeStr.split(':');
+  return int.parse(timeParts[0]);
+}
+
+int getCutoffMinutes() {
+  String timeStr = selectedCutoffTimeGlobally;
+  List<String> timeParts = timeStr.split(':');
+  String minuteStr = timeParts[1].split(' ')[0];
+  return int.parse(minuteStr);
+}
+
+DateTime _adjustDateByCutoff(DateTime drinkDate) {
+  int cutoffHour = getCutoffHour();
+  int cutoffMinutes = getCutoffMinutes();
+
+  DateTime cutoffTime = DateTime(
+    drinkDate.year,
+    drinkDate.month,
+    drinkDate.day,
+    cutoffHour,
+    cutoffMinutes,
+  );
+
+  if (drinkDate.isBefore(cutoffTime)) {
+    return drinkDate.subtract(const Duration(days: 1));
+  }
+  return drinkDate;
 }
