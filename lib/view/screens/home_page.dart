@@ -632,7 +632,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void shareContent() async {
-    // 1. Get today's drinks from Hive
     final box = Hive.box<Drink>('drinksBox');
     final today = DateTime.now();
     final todaysDrinks = box.values
@@ -642,29 +641,30 @@ class _HomePageState extends State<HomePage> {
             drink.dateTime.day == today.day)
         .toList();
 
-    // 2. Create the formatted content string
     String content = "Happy Hour\n";
-    // content += "${DateFormat('EEE MM/dd/yy').format(today)}\n";
-    content += DateFormat('EEE dd/MM/yy').format(today);
+    content += DateFormat('MM/dd/yyyy').format(today);
     content += "\n";
-    // Add drink icons to the content
-    for (var drink in todaysDrinks) {
-      content += drink.drinkType == 'beer'
+
+    // Add drink icons with line break after every 5 drinks
+    for (var i = 0; i < todaysDrinks.length; i++) {
+      if (i > 0 && i % 5 == 0) {
+        content += "\n";
+      }
+      content += todaysDrinks[i].drinkType == 'beer'
           ? '🍺'
-          : drink.drinkType == 'wine'
+          : todaysDrinks[i].drinkType == 'wine'
               ? '🍷'
               : '🍸';
     }
-    content += "\n"; // Add a newline after the drink icons
+    content += "\n";
 
-    // 3. Generate the Branch.io link
     BranchUniversalObject buo = BranchUniversalObject(
       canonicalIdentifier: 'flutter/branch',
       title: 'Happy Hour App',
-      // contentDescription: 'Happy Hour App',
       publiclyIndex: true,
       locallyIndex: true,
     );
+
     BranchLinkProperties linkProperties = BranchLinkProperties(
       channel: 'app',
       feature: 'share',
@@ -680,12 +680,8 @@ class _HomePageState extends State<HomePage> {
 
     if (response.success) {
       final generatedLink = response.result;
-      content += generatedLink; // Add the link to the content
-
-      // 4. Share the content
-      Share.share(
-        content,
-      );
+      content += generatedLink;
+      Share.share(content);
     } else {
       print('Error: ${response.errorMessage}');
     }

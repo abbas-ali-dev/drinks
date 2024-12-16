@@ -113,55 +113,47 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
 }
 
 void shareContent(BuildContext context) async {
-  // Get current route name more accurately
-  final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
-
+  final currentDate0 = DateTime.now();
   final box = Hive.box<Drink>('drinksBox');
-  String content = "Happy Hour\n";
+  List<Drink> drinksToShare;
+  String timeTitle;
 
-  // Check if we're on MonthlyPage
-  if (currentRoute.contains('MonthlyPage')) {
-    final today = DateTime.now();
-    final monthlyDrinks = box.values
+  // Check current route name to determine which screen we're on
+  final currentRoute = ModalRoute.of(context)?.settings.name;
+
+  if (currentRoute == 'StatsPage') {
+    drinksToShare = box.values.toList();
+    timeTitle = "All Time";
+  } else {
+    final currentDate = currentDate0;
+    drinksToShare = box.values
         .where((drink) =>
-            drink.dateTime.year == today.year &&
-            drink.dateTime.month == today.month)
+            drink.dateTime.year == currentDate.year &&
+            drink.dateTime.month == currentDate.month)
         .toList();
-
-    int beerCount =
-        monthlyDrinks.where((drink) => drink.drinkType == 'beer').length;
-    int wineCount =
-        monthlyDrinks.where((drink) => drink.drinkType == 'wine').length;
-    int liquorCount =
-        monthlyDrinks.where((drink) => drink.drinkType == 'drink').length;
-
-    content += "${DateFormat('MMMM yyyy').format(today)}\n\n";
-    if (liquorCount > 0) content += "🍸 - $liquorCount\n";
-    if (wineCount > 0) content += "🍷 - $wineCount\n";
-    if (beerCount > 0) content += "🍺 - $beerCount\n";
-  }
-  // Check if we're on StatsPage
-  else if (currentRoute.contains('StatsPage')) {
-    final allDrinks = box.values.toList();
-
-    int beerCount =
-        allDrinks.where((drink) => drink.drinkType == 'beer').length;
-    int wineCount =
-        allDrinks.where((drink) => drink.drinkType == 'wine').length;
-    int liquorCount =
-        allDrinks.where((drink) => drink.drinkType == 'drink').length;
-
-    content += "All Time Stats\n\n";
-    if (liquorCount > 0) content += "🍸 - $liquorCount\n";
-    if (wineCount > 0) content += "🍷 - $wineCount\n";
-    if (beerCount > 0) content += "🍺 - $beerCount\n";
+    timeTitle = DateFormat('MMMM yyyy').format(currentDate);
   }
 
-  // Generate Branch.io link
+  String content = "Happy Hour\n\n";
+  content += "$timeTitle\n\n";
+  content += "${drinksToShare.length} drinks\n\n";
+
+  // Add drink icons with line break after every 5 drinks
+  for (var i = 0; i < drinksToShare.length; i++) {
+    if (i > 0 && i % 5 == 0) {
+      content += "\n";
+    }
+    content += drinksToShare[i].drinkType == 'beer'
+        ? '🍺'
+        : drinksToShare[i].drinkType == 'wine'
+            ? '🍷'
+            : '🍸';
+  }
+  content += "\n";
+
   BranchUniversalObject buo = BranchUniversalObject(
     canonicalIdentifier: 'flutter/branch',
     title: 'Happy Hour App',
-    // contentDescription: 'Check out my monthly drinks!',
     publiclyIndex: true,
     locallyIndex: true,
   );
@@ -172,15 +164,18 @@ void shareContent(BuildContext context) async {
     campaign: 'flutter_share',
   );
 
+  linkProperties.addControlParam('\$desktop_url', 'https://myapp.com');
+
   BranchResponse response = await FlutterBranchSdk.getShortUrl(
     buo: buo,
     linkProperties: linkProperties,
   );
 
   if (response.success) {
-    content += "\n${response.result}";
-    Share.share(
-      content,
-    );
+    final generatedLink = response.result;
+    content += generatedLink;
+    Share.share(content);
+  } else {
+    print('Error: ${response.errorMessage}');
   }
 }
