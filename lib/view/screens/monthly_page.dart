@@ -66,9 +66,12 @@ class _MonthlyPageState extends State<MonthlyPage> {
   }
 
   void _calculateMonthlyDrinkCounts(DateTime monthDate) {
-    // Reset counts for all months
-
     _resetDrinkCounts();
+
+    // Calculate for double previous month
+    _calculateDrinkCountsForDoublePreviousMonth(
+      DateTime(monthDate.year, monthDate.month - 2, monthDate.day),
+    );
 
     // Calculate for previous, current, and next months
     _calculateDrinkCountsForMonth(
@@ -79,19 +82,34 @@ class _MonthlyPageState extends State<MonthlyPage> {
         DateTime(monthDate.year, monthDate.month + 1, monthDate.day),
         isNextMonth: true);
 
-    // Update month and year for display
-    doublepreviousMonthName = DateTime(monthDate.year, monthDate.month - 2)
-        .monthName(); // Correct month name calculation
+    // Update month names and years
+    doublepreviousMonthName =
+        DateTime(monthDate.year, monthDate.month - 2).monthName();
     doublepreviousMonthYear =
         DateTime(monthDate.year, monthDate.month - 2).year;
 
-    // Update month and year for display
-    previousMonthName = DateTime(monthDate.year, monthDate.month - 1)
-        .monthName(); // Correct month name calculation
+    previousMonthName =
+        DateTime(monthDate.year, monthDate.month - 1).monthName();
     previousMonthYear = DateTime(monthDate.year, monthDate.month - 1).year;
 
     nextMonthName = DateTime(monthDate.year, monthDate.month + 1).monthName();
     nextMonthYear = DateTime(monthDate.year, monthDate.month + 1).year;
+  }
+
+  void _calculateDrinkCountsForDoublePreviousMonth(DateTime monthDate) {
+    for (var drink in _drinksBox.values) {
+      if (drink.dateTime.year == monthDate.year &&
+          drink.dateTime.month == monthDate.month) {
+        if (drink.drinkType == 'beer') {
+          totalBeersForDoublePreviousMonth++;
+        } else if (drink.drinkType == 'drink') {
+          totalLiquorForDoublePreviousMonth++;
+        } else if (drink.drinkType == 'wine') {
+          totalWineForDoublePreviousMonth++;
+        }
+        totalDrinksForDoublePreviousMonth++;
+      }
+    }
   }
 
   void _resetDrinkCounts() {

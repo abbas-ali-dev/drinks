@@ -39,10 +39,33 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // Initialize with current date adjusted for cutoff time
+    _selectedDate = _getInitialDate();
     _loadDrinksForDate(_selectedDate);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       scrollToBottom();
     });
+  }
+
+  DateTime _getInitialDate() {
+    DateTime now = DateTime.now();
+    int cutoffHour = getCutoffHour();
+    int cutoffMinutes = getCutoffMinutes();
+
+    DateTime todayCutoff = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      cutoffHour,
+      cutoffMinutes,
+    );
+
+    if (now.hour < cutoffHour ||
+        (now.hour == cutoffHour && now.minute < cutoffMinutes)) {
+      todayCutoff = todayCutoff.subtract(const Duration(days: 1));
+    }
+
+    return todayCutoff;
   }
 
   void scrollToBottom() {
@@ -76,8 +99,16 @@ class _HomePageState extends State<HomePage> {
     int cutoffHour = getCutoffHour();
     int cutoffMinutes = getCutoffMinutes();
 
-    DateTime startDateTime =
-        DateTime(date.year, date.month, date.day, cutoffHour, cutoffMinutes);
+    // Start time is cutoff time of selected date
+    DateTime startDateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      cutoffHour,
+      cutoffMinutes,
+    );
+
+    // End time is cutoff time of next date
     DateTime endDateTime = startDateTime.add(const Duration(days: 1));
 
     final drinksFromHive = box.values.where((drink) {
@@ -105,31 +136,23 @@ class _HomePageState extends State<HomePage> {
   void _addDrink() {
     setState(() {
       if (selectedDrinkIndex != null) {
-        DateTime now = DateTime.now();
-        DateTime drinkDateTime;
-
         int cutoffHour = getCutoffHour();
         int cutoffMinutes = getCutoffMinutes();
+        DateTime now = DateTime.now();
 
-        // Get today's cutoff time using the global setting
-        DateTime todayCutoff = DateTime(
-          now.year,
-          now.month,
-          now.day,
-          cutoffHour,
-          cutoffMinutes,
+        // Create drink with current time but using selected date
+        DateTime drinkDateTime = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          now.hour,
+          now.minute,
         );
 
-        if (now.isBefore(todayCutoff)) {
-          drinkDateTime = DateTime(
-            now.year,
-            now.month,
-            now.day,
-            now.hour,
-            now.minute,
-          );
-        } else {
-          drinkDateTime = now;
+        // Adjust date based on cutoff time
+        if (now.hour < cutoffHour ||
+            (now.hour == cutoffHour && now.minute < cutoffMinutes)) {
+          drinkDateTime = drinkDateTime.add(const Duration(days: 1));
         }
 
         final newDrink = Drink(
@@ -140,17 +163,10 @@ class _HomePageState extends State<HomePage> {
         final box = Hive.box<Drink>('drinksBox');
         box.add(newDrink);
 
-        // Load drinks for the correct date
-        _loadDrinksForDate(drinkDateTime);
-        _selectedDate = DateTime(
-            drinkDateTime.year, drinkDateTime.month, drinkDateTime.day);
+        _loadDrinksForDate(_selectedDate);
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.easeOut,
-          );
+          scrollToBottom();
         });
 
         _showDrinkSelection = false;
@@ -166,7 +182,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _goToNextDay() {
-    if (_selectedDate.isBefore(DateTime.now())) {
+    DateTime now = DateTime.now();
+    DateTime adjustedNow = getAdjustedDate(now);
+    DateTime adjustedSelected = getAdjustedDate(_selectedDate);
+
+    if (adjustedSelected.isBefore(adjustedNow)) {
       setState(() {
         _selectedDate = _selectedDate.add(const Duration(days: 1));
         _loadDrinksForDate(_selectedDate);
@@ -361,14 +381,15 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  DateFormat('EEEE').format(_selectedDate),
+                  DateFormat('EEEE').format(getAdjustedDate(_selectedDate)),
                   style: const TextStyle(
                       fontSize: 20,
                       color: Colors.white,
                       fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  DateFormat('MMM d, yyyy').format(_selectedDate),
+                  DateFormat('MMM d, yyyy')
+                      .format(getAdjustedDate(_selectedDate)),
                   style: const TextStyle(
                       fontSize: 20,
                       color: Colors.white,
@@ -389,8 +410,8 @@ class _HomePageState extends State<HomePage> {
             IconButton(
               color: Colors.white,
               icon: const Icon(Icons.arrow_forward_ios, size: 40),
-              onPressed: _selectedDate.isBefore(DateTime(DateTime.now().year,
-                      DateTime.now().month, DateTime.now().day))
+              onPressed: DateTime.now().isAfter(getAdjustedDate(_selectedDate)
+                      .add(const Duration(days: 1)))
                   ? _goToNextDay
                   : null,
             ),
@@ -644,7 +665,6 @@ class _HomePageState extends State<HomePage> {
       publiclyIndex: true,
       locallyIndex: true,
     );
-
     BranchLinkProperties linkProperties = BranchLinkProperties(
       channel: 'app',
       feature: 'share',
@@ -670,4 +690,24 @@ class _HomePageState extends State<HomePage> {
       print('Error: ${response.errorMessage}');
     }
   }
+}
+
+DateTime getAdjustedDate(DateTime dateTime) {
+  int cutoffHour = getCutoffHour();
+  int cutoffMinutes = getCutoffMinutes();
+
+  DateTime cutoffTime = DateTime(
+    dateTime.year,
+    dateTime.month,
+    dateTime.day,
+    cutoffHour,
+    cutoffMinutes,
+  );
+
+  if (dateTime.hour < cutoffHour ||
+      (dateTime.hour == cutoffHour && dateTime.minute < cutoffMinutes)) {
+    return DateTime(dateTime.year, dateTime.month, dateTime.day - 1);
+  }
+
+  return DateTime(dateTime.year, dateTime.month, dateTime.day);
 }

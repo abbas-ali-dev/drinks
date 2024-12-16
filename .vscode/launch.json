@@ -18,12 +18,5 @@
             "type": "dart",
             "flutterMode": "release"
         },
-        {
-            "name": "drinks (Flutter Medium Phone 1)",
-            "program": "lib/main.dart",
-            "deviceId": "emulator-5554",
-            "request": "launch",
-            "type": "dart"
-        }
     ]
 }

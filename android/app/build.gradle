@@ -57,5 +57,5 @@ flutter {
     source = "../.."
 }
 dependencies{
-    implementation 'io.branch.sdk.android:library:5.8.0'
+    implementation 'io.branch.sdk.android:library:5.12.4'
 }

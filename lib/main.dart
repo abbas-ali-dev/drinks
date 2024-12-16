@@ -53,22 +53,8 @@ class _MainAppState extends State<MainApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           home: EasySplashScreen(
-            logo: Image.asset('assets/png/drink.png'),
-            title: const Text(
-              "Happy Hours",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            backgroundColor: const Color.fromARGB(255, 62, 62, 62),
-            showLoader: true,
-            loaderColor: Colors.white,
-            loadingText: const Text(
-              "Loading...",
-              style: TextStyle(color: Colors.white),
-            ),
+            backgroundImage: const AssetImage('assets/png/splash_screen.png'),
+            showLoader: false,
             navigator: const HomePage(),
             durationInSeconds: 3,
           ),
