@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
 // global_variables.dart
@@ -12,3 +13,7 @@ String _loadTimeFormatFromHive() {
 String _loadCutoffTimeFromHive() {
   return Hive.box('settingsBox').get('cutoffTime') ?? '06:00 AM';
 }
+
+final selectedMonthNotifier = ValueNotifier<DateTime>(DateTime.now());
+
+final selectedStatsYearNotifier = ValueNotifier<int>(DateTime.now().year);

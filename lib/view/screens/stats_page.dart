@@ -36,6 +36,7 @@ class _StatsPageState extends State<StatsPage> {
     super.initState();
     _drinksBox = Hive.box<Drink>('drinksBox');
     _calculateStats(null); // Start with all-time stats
+    selectedStatsYearNotifier.value = DateTime.now().year;
   }
 
   void _calculateStats(int? year) {
@@ -174,13 +175,18 @@ class _StatsPageState extends State<StatsPage> {
               if (isAllTime) {
                 isAllTime = false;
                 selectedYear = _getAvailableYears().last;
+                print(selectedYear.toString());
               } else {
                 int currentIndex = _getAvailableYears().indexOf(selectedYear);
                 if (currentIndex > 0) {
                   selectedYear = _getAvailableYears()[currentIndex - 1];
                 }
+                print(selectedYear.toString());
               }
               _calculateStats(isAllTime ? null : selectedYear);
+              print("---->${selectedYear.toString()}");
+              selectedStatsYearNotifier.value = selectedYear;
+              print(selectedStatsYearNotifier.value.toString());
             });
           },
         ),
@@ -204,6 +210,9 @@ class _StatsPageState extends State<StatsPage> {
                     isAllTime = true;
                     _calculateStats(null);
                   }
+                  print("+++++>${selectedYear.toString()}");
+                  selectedStatsYearNotifier.value = selectedYear;
+                  print(selectedStatsYearNotifier.value.toString());
                 }
               });
             },
@@ -334,6 +343,7 @@ class _StatsPageState extends State<StatsPage> {
     // Convert to sorted list
     List<int> yearsList = years.toList()..sort();
 
+    print("Selected Year notifier: ${selectedStatsYearNotifier.value}");
     return yearsList;
   }
 }

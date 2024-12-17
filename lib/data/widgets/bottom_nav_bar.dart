@@ -1,3 +1,4 @@
+import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/home_page.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
@@ -20,6 +21,85 @@ class CustomBottumNavigationBar extends StatefulWidget {
 class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
   bool _isMenuOpen = false;
 
+////////////////////shareContent/////////////
+  void shareContent() async {
+    final box = Hive.box<Drink>('drinksBox');
+    List<Drink> drinksToShare;
+    String timeTitle;
+
+    // Get the current context's widget
+    final currentWidget = ModalRoute.of(context)?.settings.name ??
+        context.widget.runtimeType.toString();
+
+    if (currentWidget.contains('StatsPage')) {
+      final selectedYear = selectedStatsYearNotifier.value;
+      drinksToShare = box.values
+          .where((drink) => drink.dateTime.year == selectedYear)
+          .toList();
+      timeTitle = "Stats for ${selectedStatsYearNotifier.value}";
+    } else if (currentWidget.contains('MonthlyPage')) {
+      DateTime selectedMonth = selectedMonthNotifier.value;
+      drinksToShare = box.values
+          .where((drink) =>
+              drink.dateTime.year == selectedMonth.year &&
+              drink.dateTime.month == selectedMonth.month)
+          .toList();
+      timeTitle = DateFormat('MMMM yyyy').format(selectedMonth);
+    } else {
+      final currentDate = DateTime.now();
+      drinksToShare = box.values
+          .where((drink) =>
+              drink.dateTime.year == currentDate.year &&
+              drink.dateTime.month == currentDate.month)
+          .toList();
+      timeTitle = DateFormat('MMMM yyyy').format(currentDate);
+    }
+
+    // Rest of your sharing logic remains the same
+    String content = "Happy Hour\n\n";
+    content += "$timeTitle\n\n";
+    content += "${drinksToShare.length} drinks\n\n";
+
+    // Add drink icons with line break after every 5 drinks
+    for (var i = 0; i < drinksToShare.length; i++) {
+      if (i > 0 && i % 5 == 0) {
+        content += "\n";
+      }
+      content += drinksToShare[i].drinkType == 'beer'
+          ? '🍺'
+          : drinksToShare[i].drinkType == 'wine'
+              ? '🍷'
+              : '🍸';
+    }
+    content += "\n";
+
+    BranchUniversalObject buo = BranchUniversalObject(
+      canonicalIdentifier: 'happyHourApp',
+      title: 'Happy Hour App',
+      publiclyIndex: true,
+      locallyIndex: true,
+    );
+
+    BranchLinkProperties linkProperties = BranchLinkProperties(
+        channel: 'app', feature: 'share', campaign: 'happyHourApp');
+
+    linkProperties.addControlParam(
+        '\$desktop_url', 'https://xfnef.app.link/happyHourApp');
+
+    BranchResponse response = await FlutterBranchSdk.getShortUrl(
+      buo: buo,
+      linkProperties: linkProperties,
+    );
+
+    if (response.success) {
+      final generatedLink = response.result;
+      content += generatedLink;
+      Share.share(content);
+    } else {
+      print('Error: ${response.errorMessage}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
@@ -39,6 +119,7 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const MonthlyPage(),
+                    settings: const RouteSettings(name: 'MonthlyPage'),
                   ),
                 );
               } else {
@@ -67,6 +148,7 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const SettingsPage(),
+                    settings: const RouteSettings(name: 'SettingsPage'),
                   ),
                 );
               } else {
@@ -99,83 +181,16 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const StatsPage(),
+                    settings: const RouteSettings(name: 'StatsPage'),
                   ),
                 );
               } else {
-                shareContent(context);
+                shareContent();
               }
             },
           ),
         ],
       ),
     );
-  }
-}
-
-void shareContent(BuildContext context) async {
-  final currentDate0 = DateTime.now();
-  final box = Hive.box<Drink>('drinksBox');
-  List<Drink> drinksToShare;
-  String timeTitle;
-
-  // Check current route name to determine which screen we're on
-  final currentRoute = ModalRoute.of(context)?.settings.name;
-
-  if (currentRoute == 'StatsPage') {
-    drinksToShare = box.values.toList();
-    timeTitle = "All Time";
-  } else {
-    final currentDate = currentDate0;
-    drinksToShare = box.values
-        .where((drink) =>
-            drink.dateTime.year == currentDate.year &&
-            drink.dateTime.month == currentDate.month)
-        .toList();
-    timeTitle = DateFormat('MMMM yyyy').format(currentDate);
-  }
-
-  String content = "Happy Hour\n\n";
-  content += "$timeTitle\n\n";
-  content += "${drinksToShare.length} drinks\n\n";
-
-  // Add drink icons with line break after every 5 drinks
-  for (var i = 0; i < drinksToShare.length; i++) {
-    if (i > 0 && i % 5 == 0) {
-      content += "\n";
-    }
-    content += drinksToShare[i].drinkType == 'beer'
-        ? '🍺'
-        : drinksToShare[i].drinkType == 'wine'
-            ? '🍷'
-            : '🍸';
-  }
-  content += "\n";
-
-  BranchUniversalObject buo = BranchUniversalObject(
-    canonicalIdentifier: 'flutter/branch',
-    title: 'Happy Hour App',
-    publiclyIndex: true,
-    locallyIndex: true,
-  );
-
-  BranchLinkProperties linkProperties = BranchLinkProperties(
-    channel: 'app',
-    feature: 'share',
-    campaign: 'flutter_share',
-  );
-
-  linkProperties.addControlParam('\$desktop_url', 'https://myapp.com');
-
-  BranchResponse response = await FlutterBranchSdk.getShortUrl(
-    buo: buo,
-    linkProperties: linkProperties,
-  );
-
-  if (response.success) {
-    final generatedLink = response.result;
-    content += generatedLink;
-    Share.share(content);
-  } else {
-    print('Error: ${response.errorMessage}');
   }
 }

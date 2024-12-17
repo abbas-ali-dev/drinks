@@ -633,33 +633,38 @@ class _HomePageState extends State<HomePage> {
 
   void shareContent() async {
     final box = Hive.box<Drink>('drinksBox');
-    final today = DateTime.now();
-    final todaysDrinks = box.values
+
+    // Use _selectedDate from AppBar instead of current date
+    final selectedDate = _selectedDate;
+
+    // Get drinks only for the selected date
+    final selectedDateDrinks = box.values
         .where((drink) =>
-            drink.dateTime.year == today.year &&
-            drink.dateTime.month == today.month &&
-            drink.dateTime.day == today.day)
+            drink.dateTime.year == selectedDate.year &&
+            drink.dateTime.month == selectedDate.month &&
+            drink.dateTime.day == selectedDate.day)
         .toList();
 
-    String content = "Happy Hour\n";
-    content += DateFormat('MM/dd/yyyy').format(today);
-    content += "\n";
+    String content = "Happy Hour\n\n";
+    content += DateFormat('MMMM dd, yyyy').format(selectedDate);
+    content += "\n\n";
+    content += "${selectedDateDrinks.length} drinks\n\n";
 
     // Add drink icons with line break after every 5 drinks
-    for (var i = 0; i < todaysDrinks.length; i++) {
+    for (var i = 0; i < selectedDateDrinks.length; i++) {
       if (i > 0 && i % 5 == 0) {
         content += "\n";
       }
-      content += todaysDrinks[i].drinkType == 'beer'
+      content += selectedDateDrinks[i].drinkType == 'beer'
           ? '🍺'
-          : todaysDrinks[i].drinkType == 'wine'
+          : selectedDateDrinks[i].drinkType == 'wine'
               ? '🍷'
               : '🍸';
     }
     content += "\n";
 
     BranchUniversalObject buo = BranchUniversalObject(
-      canonicalIdentifier: 'flutter/branch',
+      canonicalIdentifier: 'happyHourApp',
       title: 'Happy Hour App',
       publiclyIndex: true,
       locallyIndex: true,
@@ -668,10 +673,14 @@ class _HomePageState extends State<HomePage> {
     BranchLinkProperties linkProperties = BranchLinkProperties(
       channel: 'app',
       feature: 'share',
-      campaign: 'flutter_share',
+      campaign: 'happyHourApp',
     );
 
-    linkProperties.addControlParam('\$desktop_url', 'https://myapp.com');
+    linkProperties.addControlParam('\$deeplink_path', 'happyHourApp');
+    linkProperties.addControlParam('\$android_deeplink_path', 'happyHourApp');
+    linkProperties.addControlParam('\$ios_deeplink_path', 'happyHourApp');
+    linkProperties.addControlParam(
+        '\$desktop_url', 'https://xfnef.app.link/happyHourApp');
 
     BranchResponse response = await FlutterBranchSdk.getShortUrl(
       buo: buo,

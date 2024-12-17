@@ -7,13 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MonthlyPage extends StatefulWidget {
-  const MonthlyPage({super.key});
+  static DateTime selectedMonth = DateTime.now();
+
+  const MonthlyPage({Key? key}) : super(key: key);
 
   @override
-  _MonthlyPageState createState() => _MonthlyPageState();
+  State<MonthlyPage> createState() => MonthlyPageState();
 }
 
-class _MonthlyPageState extends State<MonthlyPage> {
+class MonthlyPageState extends State<MonthlyPage> {
   final DateTime _selectedDate = DateTime.now();
   DateTime _currentDate = DateTime.now();
   final List<String> drinkIcons = ['🍸', '🍷', '🍺'];
@@ -55,6 +57,7 @@ class _MonthlyPageState extends State<MonthlyPage> {
     super.initState();
     _drinksBox = Hive.box<Drink>('drinksBox');
     _calculateMonthlyDrinkCounts(_currentDate);
+    selectedMonthNotifier.value = _currentDate;
   }
 
   bool _hasDrinks(DateTime date) {
@@ -242,6 +245,8 @@ class _MonthlyPageState extends State<MonthlyPage> {
     setState(() {
       _currentDate = DateTime(_currentDate.year, _currentDate.month - 1);
       _calculateMonthlyDrinkCounts(_currentDate);
+
+      selectedMonthNotifier.value = _currentDate;
     });
   }
 
@@ -249,6 +254,8 @@ class _MonthlyPageState extends State<MonthlyPage> {
     setState(() {
       _currentDate = DateTime(_currentDate.year, _currentDate.month + 1);
       _calculateMonthlyDrinkCounts(_currentDate);
+
+      selectedMonthNotifier.value = _currentDate;
     });
   }
 

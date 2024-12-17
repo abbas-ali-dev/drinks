@@ -1,6 +1,8 @@
 import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/view/screens/home_page.dart';
+import 'package:drinks/view/screens/monthly_page.dart';
+import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:drinks/data/widgets/bottom_nav_bar.dart';
 import 'package:hive/hive.dart';
@@ -250,7 +252,66 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const CustomBottumNavigationBar(),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.grey[800],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+                icon: const Icon(
+                  Icons.calendar_month,
+                  color: Colors.white,
+                  size: 40,
+                ),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MonthlyPage(),
+                      settings: const RouteSettings(name: 'MonthlyPage'),
+                    ),
+                    (route) => false,
+                  );
+                }),
+            IconButton(
+              icon: Image.asset(
+                "assets/png/home.png",
+                width: 40,
+                height: 40,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HomePage(),
+                    settings: const RouteSettings(name: 'HomePage'),
+                  ),
+                  (route) => false,
+                );
+              },
+            ),
+            IconButton(
+              icon: Image.asset(
+                "assets/png/stats.png",
+                width: 40,
+                height: 40,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StatsPage(),
+                    settings: const RouteSettings(name: 'StatsPage'),
+                  ),
+                  (route) => false,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
