@@ -197,7 +197,11 @@ class _StatsPageState extends State<StatsPage> {
         ),
         actions: [
           IconButton(
-            color: Colors.white,
+            color: (!isAllTime &&
+                    _getAvailableYears().indexOf(selectedYear) <
+                        _getAvailableYears().length)
+                ? Colors.white
+                : Colors.grey[700],
             icon: const Icon(Icons.arrow_forward_ios, size: 40),
             onPressed: () {
               setState(() {
@@ -210,9 +214,7 @@ class _StatsPageState extends State<StatsPage> {
                     isAllTime = true;
                     _calculateStats(null);
                   }
-                  print("+++++>${selectedYear.toString()}");
                   selectedStatsYearNotifier.value = selectedYear;
-                  print(selectedStatsYearNotifier.value.toString());
                 }
               });
             },

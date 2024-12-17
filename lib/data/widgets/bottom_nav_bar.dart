@@ -55,23 +55,44 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
       timeTitle = DateFormat('MMMM yyyy').format(currentDate);
     }
 
-    // Rest of your sharing logic remains the same
+    // Count drinks by type
+    Map<String, int> drinkCounts = {
+      'beer': 0,
+      'wine': 0,
+      'drink': 0,
+    };
+
+    for (var drink in drinksToShare) {
+      drinkCounts[drink.drinkType] = drinkCounts[drink.drinkType]! + 1;
+    }
+
+    // Sort drinks by count
+    var sortedDrinks = drinkCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
     String content = "Happy Hour\n\n";
     content += "$timeTitle\n\n";
     content += "${drinksToShare.length} drinks\n\n";
 
-    // Add drink icons with line break after every 5 drinks
-    for (var i = 0; i < drinksToShare.length; i++) {
-      if (i > 0 && i % 5 == 0) {
-        content += "\n";
+    // Add sorted drink counts
+    for (var drink in sortedDrinks) {
+      if (drink.value > 0) {
+        String emoji = drink.key == 'beer'
+            ? '🍺'
+            : drink.key == 'wine'
+                ? '🍷'
+                : '🍸';
+
+        // Add each drink type's emojis with line breaks after every 5
+        for (var i = 0; i < drink.value; i++) {
+          if (i > 0 && i % 5 == 0) {
+            content += "\n";
+          }
+          content += emoji;
+        }
+        content += "\n\n";
       }
-      content += drinksToShare[i].drinkType == 'beer'
-          ? '🍺'
-          : drinksToShare[i].drinkType == 'wine'
-              ? '🍷'
-              : '🍸';
     }
-    content += "\n";
 
     BranchUniversalObject buo = BranchUniversalObject(
       canonicalIdentifier: 'happyHourApp',
@@ -83,6 +104,9 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
     BranchLinkProperties linkProperties = BranchLinkProperties(
         channel: 'app', feature: 'share', campaign: 'happyHourApp');
 
+    linkProperties.addControlParam('\$deeplink_path', 'happyHourApp');
+    linkProperties.addControlParam('\$android_deeplink_path', 'happyHourApp');
+    linkProperties.addControlParam('\$ios_deeplink_path', 'happyHourApp');
     linkProperties.addControlParam(
         '\$desktop_url', 'https://xfnef.app.link/happyHourApp');
 
