@@ -1,7 +1,5 @@
-import 'package:drinks/global/global_variable.dart'; // Import your global variable
-import 'package:drinks/view/screens/home_page.dart';
+import 'package:drinks/global/global_variable.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:sizer/sizer.dart';
 
@@ -121,13 +119,6 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
             // Pass the updated _selectedTime to the callback
             widget.onTimeSelected(_selectedTime);
             Navigator.pop(context);
-            // Navigator.pushAndRemoveUntil(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (context) => const HomePage(),
-            //   ),
-            //   (route) => false,
-            // );
           },
           child: const Text('OK', style: TextStyle(color: Colors.white)),
         ),
@@ -236,7 +227,7 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
   Widget _buildHourScroller() {
     return Padding(
       padding: EdgeInsets.only(
-          right: selectedTimeFormatGlobally == '24 Hour' ? 10 : 50),
+          right: selectedTimeFormatGlobally == '24 Hour' ? 20 : 50),
       child: SizedBox(
         width: selectedTimeFormatGlobally == '24 Hour' ? 80 : 60,
         height: 150,

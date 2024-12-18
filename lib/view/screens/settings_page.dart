@@ -1,10 +1,11 @@
 import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
+import 'package:drinks/services/adMob.dart';
 import 'package:drinks/view/screens/home_page.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
 import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
-import 'package:drinks/data/widgets/bottom_nav_bar.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
 import 'package:sizer/sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,6 +18,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  BannerAd? _bannerAd;
   final List<String> _timeFormats = ['12 Hour', '24 Hour'];
   final List<String> _cutoffTimes = [
     '1:00 AM',
@@ -39,6 +41,12 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    checkConectivity();
+    if (showAdMobGlobally.value == true) {
+      _bannerAd = AdHelper.createBannerAd(() {
+        setState(() {});
+      });
+    }
     // Load settings from Hive
     selectedTimeFormatGlobally =
         Hive.box('settingsBox').get('timeFormat') ?? '12 Hour';
@@ -51,266 +59,288 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        centerTitle: true,
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-              fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.grey[800],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Preferences',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
+    return SafeArea(
+      child: Column(
+        children: [
+          AdHelper.getBannerAdWidget(_bannerAd),
+          Expanded(
+            child: Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                automaticallyImplyLeading: false,
+                centerTitle: true,
+                title: const Text(
+                  'Settings',
+                  style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: Colors.grey[800],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Time Format',
+                    const Text(
+                      'Preferences',
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Time Format',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            SizedBox(height: 8),
+                            SizedBox(
+                                width: 200,
+                                child: Text(
+                                    'Toggle between 12 hour and 24 hour time format',
+                                    style: TextStyle(color: Colors.white))),
+                          ],
+                        ),
+                        SizedBox(
+                          width: 20.w,
+                          child: DropdownButton<String>(
+                            value: selectedTimeFormatGlobally,
+                            dropdownColor: Colors.grey[800],
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                            underline: Container(
+                              height: 2,
+                              color: Colors.white,
+                            ),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedTimeFormatGlobally = newValue!;
+                                // Save to Hive:
+                                Hive.box('settingsBox')
+                                    .put('timeFormat', newValue);
+                              });
+                              // Navigator.pushAndRemoveUntil(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     builder: (context) => const HomePage(),
+                              //   ),
+                              //   (route) => false,
+                              // );
+                            },
+                            items: _timeFormats.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Cutoff Time',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            SizedBox(height: 8),
+                            SizedBox(
+                                width: 200,
+                                child: Text(
+                                    'Choose the time when drinks are considered the following day',
+                                    style: TextStyle(color: Colors.white))),
+                          ],
+                        ),
+                        SizedBox(
+                          width: 20.w,
+                          child: DropdownButton<String>(
+                            value: selectedCutoffTimeGlobally,
+                            dropdownColor: Colors.grey[800],
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                            underline: Container(
+                              height: 2,
+                              color: Colors.white,
+                            ),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedCutoffTimeGlobally = newValue!;
+                                // Save to Hive:
+                                Hive.box('settingsBox')
+                                    .put('cutoffTime', newValue);
+                              });
+                              debugPrint(
+                                  'Selected cutoff time: $selectedCutoffTimeGlobally');
+                            },
+                            items: _cutoffTimes.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
+                    const Text(
+                      'Other',
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: () {
+                        _launchEmail();
+                      },
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Feedback',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Please send any feedback to halfpriceappz@gmail.com',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: () {
+                        _showClearDataConfirmationDialog(context);
+                      },
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Clear All Data',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Clear all stored drinks',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Version',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white),
                     ),
-                    SizedBox(height: 8),
-                    SizedBox(
-                        width: 200,
-                        child: Text(
-                            'Toggle between 12 hour and 24 hour time format',
-                            style: TextStyle(color: Colors.white))),
+                    const SizedBox(height: 8),
+                    const Text('1.0.0', style: TextStyle(color: Colors.white)),
                   ],
                 ),
-                SizedBox(
-                  width: 20.w,
-                  child: DropdownButton<String>(
-                    value: selectedTimeFormatGlobally,
-                    dropdownColor: Colors.grey[800],
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                    underline: Container(
-                      height: 2,
-                      color: Colors.white,
-                    ),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedTimeFormatGlobally = newValue!;
-                        // Save to Hive:
-                        Hive.box('settingsBox').put('timeFormat', newValue);
-                      });
-                      // Navigator.pushAndRemoveUntil(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => const HomePage(),
-                      //   ),
-                      //   (route) => false,
-                      // );
-                    },
-                    items: _timeFormats.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              bottomNavigationBar: BottomAppBar(
+                color: Colors.grey[800],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Text(
-                      'Cutoff Time',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                    IconButton(
+                        icon: const Icon(
+                          Icons.calendar_month,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                        onPressed: () {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MonthlyPage(),
+                              settings:
+                                  const RouteSettings(name: 'MonthlyPage'),
+                            ),
+                            (route) => false,
+                          );
+                        }),
+                    IconButton(
+                      icon: Image.asset(
+                        "assets/png/home.png",
+                        width: 40,
+                        height: 40,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HomePage(),
+                            settings: const RouteSettings(name: 'HomePage'),
+                          ),
+                          (route) => false,
+                        );
+                      },
                     ),
-                    SizedBox(height: 8),
-                    SizedBox(
-                        width: 200,
-                        child: Text(
-                            'Choose the time when drinks are considered the following day',
-                            style: TextStyle(color: Colors.white))),
+                    IconButton(
+                      icon: Image.asset(
+                        "assets/png/stats.png",
+                        width: 40,
+                        height: 40,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const StatsPage(),
+                            settings: const RouteSettings(name: 'StatsPage'),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                    ),
                   ],
                 ),
-                SizedBox(
-                  width: 20.w,
-                  child: DropdownButton<String>(
-                    value: selectedCutoffTimeGlobally,
-                    dropdownColor: Colors.grey[800],
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                    underline: Container(
-                      height: 2,
-                      color: Colors.white,
-                    ),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedCutoffTimeGlobally = newValue!;
-                        // Save to Hive:
-                        Hive.box('settingsBox').put('cutoffTime', newValue);
-                      });
-                      debugPrint(
-                          'Selected cutoff time: $selectedCutoffTimeGlobally');
-                    },
-                    items: _cutoffTimes.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-            const Text(
-              'Other',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 20),
-            GestureDetector(
-              onTap: () {
-                _launchEmail();
-              },
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Feedback',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Please send any feedback to halfpriceappz@gmail.com',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
               ),
             ),
-            const SizedBox(height: 20),
-            GestureDetector(
-              onTap: () {
-                _showClearDataConfirmationDialog(context);
-              },
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Clear All Data',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Clear all stored drinks',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Version',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-            const Text('1.0.0', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.grey[800],
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-                icon: const Icon(
-                  Icons.calendar_month,
-                  color: Colors.white,
-                  size: 40,
-                ),
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const MonthlyPage(),
-                      settings: const RouteSettings(name: 'MonthlyPage'),
-                    ),
-                    (route) => false,
-                  );
-                }),
-            IconButton(
-              icon: Image.asset(
-                "assets/png/home.png",
-                width: 40,
-                height: 40,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HomePage(),
-                    settings: const RouteSettings(name: 'HomePage'),
-                  ),
-                  (route) => false,
-                );
-              },
-            ),
-            IconButton(
-              icon: Image.asset(
-                "assets/png/stats.png",
-                width: 40,
-                height: 40,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const StatsPage(),
-                    settings: const RouteSettings(name: 'StatsPage'),
-                  ),
-                  (route) => false,
-                );
-              },
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -3,8 +3,8 @@ import 'package:drinks/view/screens/home_page.dart';
 import 'package:easy_splash_screen/easy_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_branch_sdk/flutter_branch_sdk.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:drinks/models/drink_model.dart';
 import 'package:sizer/sizer.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -12,10 +12,6 @@ import 'package:intl/date_symbol_data_local.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Branch.io
-  // FlutterBranchSdk.initSession().listen((deepLinkData) {
-  //   print('Deep link data: $deepLinkData');
-  // });
   await FlutterBranchSdk.init(
     // useTestKey: false,
     enableLogging: true,
@@ -35,6 +31,9 @@ void main() async {
   await Hive.openBox<Drink>('drinksBox');
   await Hive.openBox('settingsBox'); // Open the settings box
 
+  // Add AdMob initialization here
+  await MobileAds.instance.initialize();
+
   runApp(const MainApp());
 }
 
@@ -51,6 +50,8 @@ class _MainAppState extends State<MainApp> {
     return Sizer(
       builder: (context, orientation, deviceType) {
         return MaterialApp(
+          color: Colors.black,
+          title: 'Happy Hours',
           debugShowCheckedModeBanner: false,
           home: EasySplashScreen(
             backgroundImage: const AssetImage('assets/png/splash_screen.png'),

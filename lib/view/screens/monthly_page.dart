@@ -2,8 +2,10 @@ import 'package:drinks/data/enums/month_names.dart';
 import 'package:drinks/data/widgets/bottom_nav_bar.dart';
 import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
+import 'package:drinks/services/adMob.dart';
 import 'package:drinks/view/screens/home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MonthlyPage extends StatefulWidget {
@@ -16,6 +18,7 @@ class MonthlyPage extends StatefulWidget {
 }
 
 class MonthlyPageState extends State<MonthlyPage> {
+  BannerAd? _bannerAd;
   final DateTime _selectedDate = DateTime.now();
   DateTime _currentDate = DateTime.now();
   final List<String> drinkIcons = ['🍸', '🍷', '🍺'];
@@ -55,6 +58,12 @@ class MonthlyPageState extends State<MonthlyPage> {
   @override
   void initState() {
     super.initState();
+    checkConectivity();
+    if (showAdMobGlobally.value == true) {
+      _bannerAd = AdHelper.createBannerAd(() {
+        setState(() {});
+      });
+    }
     _drinksBox = Hive.box<Drink>('drinksBox');
     _calculateMonthlyDrinkCounts(_currentDate);
     selectedMonthNotifier.value = _currentDate;
@@ -260,57 +269,72 @@ class MonthlyPageState extends State<MonthlyPage> {
   }
 
   @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          color: Colors.white,
-          icon: const Icon(Icons.arrow_back, size: 40),
-          onPressed: () {
-            _goToPreviousMonth();
-          },
-        ),
-        title: GestureDetector(
-          onTap: _selectMonthYear,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _currentDate.monthName(),
-                style: const TextStyle(
+    return SafeArea(
+      child: Column(
+        children: [
+          AdHelper.getBannerAdWidget(_bannerAd),
+          Expanded(
+            child: Scaffold(
+              appBar: AppBar(
+                leading: IconButton(
+                  color: Colors.white,
+                  icon: const Icon(Icons.arrow_back, size: 40),
+                  onPressed: () {
+                    _goToPreviousMonth();
+                  },
+                ),
+                title: GestureDetector(
+                  onTap: _selectMonthYear,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _currentDate.monthName(),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 23,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '${_currentDate.year}',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 23,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  IconButton(
                     color: Colors.white,
-                    fontSize: 23,
-                    fontWeight: FontWeight.bold),
+                    icon: const Icon(Icons.arrow_forward, size: 40),
+                    // Disable forward arrow if current month is displayed
+                    onPressed: _currentDate.year == DateTime.now().year &&
+                            _currentDate.month == DateTime.now().month
+                        ? null
+                        : _goToNextMonth,
+                  ),
+                ],
+                centerTitle: true,
+                backgroundColor: Colors.grey[800],
               ),
-              Text(
-                '${_currentDate.year}',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 23,
-                    fontWeight: FontWeight.bold),
+              body: Container(
+                color: Colors.black,
+                child: _buildMonthView(_currentDate),
               ),
-            ],
-          ),
-        ),
-        actions: [
-          IconButton(
-            color: Colors.white,
-            icon: const Icon(Icons.arrow_forward, size: 40),
-            // Disable forward arrow if current month is displayed
-            onPressed: _currentDate.year == DateTime.now().year &&
-                    _currentDate.month == DateTime.now().month
-                ? null
-                : _goToNextMonth,
+              bottomNavigationBar: const CustomBottumNavigationBar(),
+            ),
           ),
         ],
-        centerTitle: true,
-        backgroundColor: Colors.grey[800],
       ),
-      body: Container(
-        color: Colors.black,
-        child: _buildMonthView(_currentDate),
-      ),
-      bottomNavigationBar: const CustomBottumNavigationBar(),
     );
   }
 

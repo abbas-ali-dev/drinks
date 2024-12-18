@@ -1,12 +1,15 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drinks/data/widgets/analogClockDialog.dart';
 import 'package:drinks/data/widgets/drink_selection_dialog.dart';
 import 'package:drinks/global/global_variable.dart';
 import 'package:drinks/models/drink_model.dart';
+import 'package:drinks/services/adMob.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
 import 'package:drinks/view/screens/settings_page.dart';
 import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_branch_sdk/flutter_branch_sdk.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -20,6 +23,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  BannerAd? _bannerAd;
   List totalDrinks = [
     {"name": "drink", "image": Image.asset("assets/png/drink.png")},
     {"name": "wine", "image": Image.asset("assets/png/wine.png")},
@@ -39,6 +43,13 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    checkConectivity();
+    if (showAdMobGlobally.value == true) {
+      _bannerAd = AdHelper.createBannerAd(() {
+        setState(() {});
+      });
+    }
+
     // Initialize with current date adjusted for cutoff time
     _selectedDate = _getInitialDate();
     _loadDrinksForDate(_selectedDate);
@@ -364,6 +375,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -373,259 +390,277 @@ class _HomePageState extends State<HomePage> {
           });
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: GestureDetector(
-            onTap: () => _selectDate(context),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  DateFormat('EEEE').format(getAdjustedDate(_selectedDate)),
-                  style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  DateFormat('MMM d, yyyy')
-                      .format(getAdjustedDate(_selectedDate)),
-                  style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios,
-              size: 40,
-              color: Colors.white,
-            ),
-            onPressed: _goToPreviousDay,
-          ),
-          actions: [
-            IconButton(
-              color: Colors.white,
-              icon: const Icon(Icons.arrow_forward_ios, size: 40),
-              onPressed: DateTime.now().isAfter(getAdjustedDate(_selectedDate)
-                      .add(const Duration(days: 1)))
-                  ? _goToNextDay
-                  : null,
-            ),
-          ],
-          centerTitle: true,
-          backgroundColor: const Color.fromARGB(255, 53, 53, 53),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onHorizontalDragEnd: (DragEndDetails details) {
-                    if (details.primaryVelocity! < 0) {
-                      // Right to left swipe - Show notes
-                      setState(() {
-                        _showNotes = true;
-                      });
-                    } else if (details.primaryVelocity! > 0) {
-                      // Left to right swipe - Hide notes
-                      setState(() {
-                        _showNotes = false;
-                      });
-                    }
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left:
-                          selectedTimeFormatGlobally == '24 Hour' ? 28.w : 25.w,
+      child: SafeArea(
+        child: Column(
+          children: [
+            AdHelper.getBannerAdWidget(_bannerAd),
+            Expanded(
+              child: Scaffold(
+                appBar: AppBar(
+                  title: GestureDetector(
+                    onTap: () => _selectDate(context),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          DateFormat('EEEE')
+                              .format(getAdjustedDate(_selectedDate)),
+                          style: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          DateFormat('MMM d, yyyy')
+                              .format(getAdjustedDate(_selectedDate)),
+                          style: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      shrinkWrap: true,
-                      itemCount: _drinksForSelectedDate.length,
-                      itemBuilder: (context, index) {
-                        return Center(
-                          child: ListTile(
-                            leading: GestureDetector(
-                              onTap: () => _showDrinkChangeDialog(index),
-                              child: _drinksForSelectedDate[index]['type'] ==
-                                      'drink'
-                                  ? Image.asset("assets/png/drink.png")
-                                  : _drinksForSelectedDate[index]['type'] ==
-                                          'beer'
-                                      ? Image.asset("assets/png/beer.png")
-                                      : _drinksForSelectedDate[index]['type'] ==
-                                              'wine'
-                                          ? Image.asset("assets/png/wine.png")
-                                          : const SizedBox.shrink(),
+                  ),
+                  leading: IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                    onPressed: _goToPreviousDay,
+                  ),
+                  actions: [
+                    IconButton(
+                      color: Colors.white,
+                      icon: const Icon(Icons.arrow_forward_ios, size: 40),
+                      onPressed: DateTime.now().isAfter(
+                              getAdjustedDate(_selectedDate)
+                                  .add(const Duration(days: 1)))
+                          ? _goToNextDay
+                          : null,
+                    ),
+                  ],
+                  centerTitle: true,
+                  backgroundColor: const Color.fromARGB(255, 53, 53, 53),
+                ),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onHorizontalDragEnd: (DragEndDetails details) {
+                            if (details.primaryVelocity! < 0 ||
+                                _drinksForSelectedDate.isEmpty) {
+                              // Right to left swipe - Show notes
+                              setState(() {
+                                _showNotes = !_showNotes;
+                              });
+                            }
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: selectedTimeFormatGlobally == '24 Hour'
+                                  ? 29.w
+                                  : 26.w,
                             ),
-                            title: GestureDetector(
-                              onTap: () => _showTimePicker(index),
-                              child: Text(
-                                _drinksForSelectedDate[index]['time'],
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontSize: 20, color: Colors.white),
-                              ),
-                            ),
-                            subtitle: _showNotes
-                                ? Text(
-                                    _drinksForSelectedDate[index]['note'] ?? '',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16,
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              shrinkWrap: true,
+                              itemCount: _drinksForSelectedDate.length,
+                              itemBuilder: (context, index) {
+                                return Center(
+                                  child: ListTile(
+                                    leading: GestureDetector(
+                                      onTap: () =>
+                                          _showDrinkChangeDialog(index),
+                                      child: _drinksForSelectedDate[index]
+                                                  ['type'] ==
+                                              'drink'
+                                          ? Image.asset("assets/png/drink.png")
+                                          : _drinksForSelectedDate[index]
+                                                      ['type'] ==
+                                                  'beer'
+                                              ? Image.asset(
+                                                  "assets/png/beer.png")
+                                              : _drinksForSelectedDate[index]
+                                                          ['type'] ==
+                                                      'wine'
+                                                  ? Image.asset(
+                                                      "assets/png/wine.png")
+                                                  : const SizedBox.shrink(),
                                     ),
-                                  )
-                                : null,
+                                    title: GestureDetector(
+                                      onTap: () => _showTimePicker(index),
+                                      child: Text(
+                                        _drinksForSelectedDate[index]['time'],
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontSize: 20, color: Colors.white),
+                                      ),
+                                    ),
+                                    subtitle: _showNotes
+                                        ? Text(
+                                            _drinksForSelectedDate[index]
+                                                    ['note'] ??
+                                                '',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              const Divider(
-                thickness: 2,
-                color: Colors.white,
-                height: 3,
-              ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _showDrinksPerHour = !_showDrinksPerHour;
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    _showDrinksPerHour
-                        ? '${_calculateDrinksPerHour()} Drinks/Hour'
-                        : '${_drinksForSelectedDate.length} Drinks',
-                    style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
-                ),
-              ),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _showDrinkSelection
-                    ? SizedBox(
-                        height: 10.h,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          shrinkWrap: true,
-                          itemCount: totalDrinks.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10.0),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedDrinkIndex = index;
-                                    _addDrink();
-                                  });
-                                },
-                                child: Container(
-                                  child: totalDrinks[index]["image"],
+                        ),
+                      ),
+                      const Divider(
+                        thickness: 2,
+                        color: Colors.white,
+                        height: 3,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _showDrinksPerHour = !_showDrinksPerHour;
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Text(
+                            _showDrinksPerHour
+                                ? '${_calculateDrinksPerHour()} Drinks/Hour'
+                                : '${_drinksForSelectedDate.length} Drinks',
+                            style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: _showDrinkSelection
+                            ? SizedBox(
+                                height: 10.h,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  shrinkWrap: true,
+                                  itemCount: totalDrinks.length,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10.0),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            selectedDrinkIndex = index;
+                                            _addDrink();
+                                          });
+                                        },
+                                        child: Container(
+                                          child: totalDrinks[index]["image"],
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
+                backgroundColor: Colors.black,
+                bottomNavigationBar: BottomAppBar(
+                  color: Colors.grey[800],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          _isMenuOpen ? Icons.calendar_month : Icons.menu,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                        onPressed: () {
+                          if (_isMenuOpen) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MonthlyPage(),
+                                settings:
+                                    const RouteSettings(name: 'MonthlyPage'),
                               ),
                             );
-                          },
+                          } else {
+                            setState(() {
+                              _isMenuOpen = true;
+                            });
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isMenuOpen ? Icons.settings : Icons.add,
+                          color: Colors.white,
+                          size: 40,
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
-        ),
-        backgroundColor: Colors.black,
-        bottomNavigationBar: BottomAppBar(
-          color: Colors.grey[800],
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon: Icon(
-                  _isMenuOpen ? Icons.calendar_month : Icons.menu,
-                  color: Colors.white,
-                  size: 40,
+                        onPressed: () {
+                          if (_isMenuOpen) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsPage(),
+                              ),
+                            );
+                          } else {
+                            setState(() {
+                              _showDrinkSelection = !_showDrinkSelection;
+                            });
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: _isMenuOpen
+                            ? Image.asset(
+                                "assets/png/stats.png",
+                                width: 40,
+                                height: 40,
+                                color: Colors.white,
+                              )
+                            : const Icon(
+                                Icons.near_me_outlined,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                        onPressed: () {
+                          if (_isMenuOpen) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const StatsPage(),
+                                settings:
+                                    const RouteSettings(name: 'StatsPage'),
+                              ),
+                            );
+                          } else {
+                            shareContent();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                onPressed: () {
-                  if (_isMenuOpen) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MonthlyPage(),
-                        settings: const RouteSettings(name: 'MonthlyPage'),
-                      ),
-                    );
-                  } else {
-                    setState(() {
-                      _isMenuOpen = true;
-                    });
-                  }
-                },
               ),
-              IconButton(
-                icon: Icon(
-                  _isMenuOpen ? Icons.settings : Icons.add,
-                  color: Colors.white,
-                  size: 40,
-                ),
-                onPressed: () {
-                  if (_isMenuOpen) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(),
-                      ),
-                    );
-                  } else {
-                    setState(() {
-                      _showDrinkSelection = !_showDrinkSelection;
-                    });
-                  }
-                },
-              ),
-              IconButton(
-                icon: _isMenuOpen
-                    ? Image.asset(
-                        "assets/png/stats.png",
-                        width: 40,
-                        height: 40,
-                        color: Colors.white,
-                      )
-                    : const Icon(
-                        Icons.near_me_outlined,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                onPressed: () {
-                  if (_isMenuOpen) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const StatsPage(),
-                        settings: const RouteSettings(name: 'StatsPage'),
-                      ),
-                    );
-                  } else {
-                    shareContent();
-                  }
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
