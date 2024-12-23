@@ -18,7 +18,7 @@ class StatsPage extends StatefulWidget {
 class _StatsPageState extends State<StatsPage> {
   BannerAd? _bannerAd;
   late final Box<Drink> _drinksBox;
-  bool isAllTime = true;
+
   int selectedYear = DateTime.now().year;
 
   int totalDrinks = 0;
@@ -192,8 +192,8 @@ class _StatsPageState extends State<StatsPage> {
                   icon: const Icon(Icons.arrow_back_ios, size: 40),
                   onPressed: () {
                     setState(() {
-                      if (isAllTime) {
-                        isAllTime = false;
+                      if (isAllTimeViewNotifier.value) {
+                        isAllTimeViewNotifier.value = false;
                         selectedYear = _getAvailableYears().last;
                         print(selectedYear.toString());
                       } else {
@@ -204,7 +204,8 @@ class _StatsPageState extends State<StatsPage> {
                         }
                         print(selectedYear.toString());
                       }
-                      _calculateStats(isAllTime ? null : selectedYear);
+                      _calculateStats(
+                          isAllTimeViewNotifier.value ? null : selectedYear);
                       print("---->${selectedYear.toString()}");
                       selectedStatsYearNotifier.value = selectedYear;
                       print(selectedStatsYearNotifier.value.toString());
@@ -212,7 +213,9 @@ class _StatsPageState extends State<StatsPage> {
                   },
                 ),
                 title: Text(
-                  isAllTime ? 'All Time' : selectedYear.toString(),
+                  isAllTimeViewNotifier.value
+                      ? 'All Time'
+                      : selectedYear.toString(),
                   style: const TextStyle(
                       fontSize: 25,
                       color: Colors.white,
@@ -220,7 +223,7 @@ class _StatsPageState extends State<StatsPage> {
                 ),
                 actions: [
                   IconButton(
-                    color: (!isAllTime &&
+                    color: (!isAllTimeViewNotifier.value &&
                             _getAvailableYears().indexOf(selectedYear) <
                                 _getAvailableYears().length)
                         ? Colors.white
@@ -228,7 +231,7 @@ class _StatsPageState extends State<StatsPage> {
                     icon: const Icon(Icons.arrow_forward_ios, size: 40),
                     onPressed: () {
                       setState(() {
-                        if (!isAllTime) {
+                        if (!isAllTimeViewNotifier.value) {
                           int currentIndex =
                               _getAvailableYears().indexOf(selectedYear);
                           if (currentIndex < _getAvailableYears().length - 1) {
@@ -236,7 +239,7 @@ class _StatsPageState extends State<StatsPage> {
                                 _getAvailableYears()[currentIndex + 1];
                             _calculateStats(selectedYear);
                           } else {
-                            isAllTime = true;
+                            isAllTimeViewNotifier.value = true;
                             _calculateStats(null);
                           }
                           selectedStatsYearNotifier.value = selectedYear;

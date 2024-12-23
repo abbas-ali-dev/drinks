@@ -668,11 +668,8 @@ class _HomePageState extends State<HomePage> {
 
   void shareContent() async {
     final box = Hive.box<Drink>('drinksBox');
-
-    // Use _selectedDate from AppBar instead of current date
     final selectedDate = _selectedDate;
 
-    // Get drinks only for the selected date
     final selectedDateDrinks = box.values
         .where((drink) =>
             drink.dateTime.year == selectedDate.year &&
@@ -680,10 +677,9 @@ class _HomePageState extends State<HomePage> {
             drink.dateTime.day == selectedDate.day)
         .toList();
 
-    String content = "Happy Hour\n\n";
-    content += DateFormat('MMMM dd, yyyy').format(selectedDate);
-    content += "\n\n";
-    content += "${selectedDateDrinks.length} drinks\n\n";
+    String content = "Happy Hour\n";
+    content += DateFormat('E MM/dd/yy').format(selectedDate);
+    content += "\n";
 
     // Add drink icons with line break after every 5 drinks
     for (var i = 0; i < selectedDateDrinks.length; i++) {
@@ -698,37 +694,9 @@ class _HomePageState extends State<HomePage> {
     }
     content += "\n";
 
-    BranchUniversalObject buo = BranchUniversalObject(
-      canonicalIdentifier: 'happyHourApp',
-      title: 'Happy Hour App',
-      publiclyIndex: true,
-      locallyIndex: true,
-    );
-
-    BranchLinkProperties linkProperties = BranchLinkProperties(
-      channel: 'app',
-      feature: 'share',
-      campaign: 'happyHourApp',
-    );
-
-    linkProperties.addControlParam('\$deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam('\$android_deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam('\$ios_deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam(
-        '\$desktop_url', 'https://xfnef.app.link/happyHourApp');
-
-    BranchResponse response = await FlutterBranchSdk.getShortUrl(
-      buo: buo,
-      linkProperties: linkProperties,
-    );
-
-    if (response.success) {
-      final generatedLink = response.result;
-      content += generatedLink;
-      Share.share(content);
-    } else {
-      print('Error: ${response.errorMessage}');
-    }
+    // Instead of generating dynamic Branch link, use the fixed URL
+    content += "http://xfnef.app.link/happyHourApp";
+    Share.share(content);
   }
 }
 

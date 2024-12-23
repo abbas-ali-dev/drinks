@@ -32,11 +32,16 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
         context.widget.runtimeType.toString();
 
     if (currentWidget.contains('StatsPage')) {
-      final selectedYear = selectedStatsYearNotifier.value;
-      drinksToShare = box.values
-          .where((drink) => drink.dateTime.year == selectedYear)
-          .toList();
-      timeTitle = "Stats for ${selectedStatsYearNotifier.value}";
+      if (isAllTimeViewNotifier.value) {
+        drinksToShare = box.values.toList(); // Get all drinks
+        timeTitle = "All-Time";
+      } else {
+        final selectedYear = selectedStatsYearNotifier.value;
+        drinksToShare = box.values
+            .where((drink) => drink.dateTime.year == selectedYear)
+            .toList();
+        timeTitle = "$selectedYear";
+      }
     } else if (currentWidget.contains('MonthlyPage')) {
       DateTime selectedMonth = selectedMonthNotifier.value;
       drinksToShare = box.values
@@ -55,73 +60,61 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
       timeTitle = DateFormat('MMMM yyyy').format(currentDate);
     }
 
-    // Count drinks by type
     Map<String, int> drinkCounts = {
-      'beer': 0,
       'wine': 0,
       'drink': 0,
+      'beer': 0,
     };
 
     for (var drink in drinksToShare) {
       drinkCounts[drink.drinkType] = drinkCounts[drink.drinkType]! + 1;
     }
 
-    // Sort drinks by count
     var sortedDrinks = drinkCounts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    String content = "Happy Hour\n\n";
-    content += "$timeTitle\n\n";
-    content += "${drinksToShare.length} drinks\n\n";
+    String content = "Happy Hour\n";
+    content += "$timeTitle\n";
+    content += "${drinksToShare.length} drinks\n";
 
-    // Add sorted drink counts
+    // New format for drink counts
     for (var drink in sortedDrinks) {
       if (drink.value > 0) {
-        String emoji = drink.key == 'beer'
-            ? '🍺'
-            : drink.key == 'wine'
-                ? '🍷'
-                : '🍸';
-
-        // Add each drink type's emojis with line breaks after every 5
-        for (var i = 0; i < drink.value; i++) {
-          if (i > 0 && i % 5 == 0) {
-            content += "\n";
-          }
-          content += emoji;
-        }
-        content += "\n\n";
+        String emoji = drink.key == 'wine'
+            ? '🍷'
+            : drink.key == 'drink'
+                ? '🍸'
+                : '🍺';
+        content += "$emoji - ${drink.value}\n";
       }
     }
 
-    BranchUniversalObject buo = BranchUniversalObject(
-      canonicalIdentifier: 'happyHourApp',
-      title: 'Happy Hour App',
-      publiclyIndex: true,
-      locallyIndex: true,
-    );
+    // Get Branch link and append
+    // BranchUniversalObject buo = BranchUniversalObject(
+    //   canonicalIdentifier: 'happyHourApp',
+    //   title: 'Happy Hour App',
+    //   publiclyIndex: true,
+    //   locallyIndex: true,
+    // );
 
-    BranchLinkProperties linkProperties = BranchLinkProperties(
-        channel: 'app', feature: 'share', campaign: 'happyHourApp');
+    // BranchLinkProperties linkProperties = BranchLinkProperties(
+    //     channel: 'app', feature: 'share', campaign: 'happyHourApp');
 
-    linkProperties.addControlParam('\$deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam('\$android_deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam('\$ios_deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam(
-        '\$desktop_url', 'https://xfnef.app.link/happyHourApp');
+    // linkProperties.addControlParam('\$deeplink_path', 'happyHourApp');
+    // linkProperties.addControlParam('\$android_deeplink_path', 'happyHourApp');
+    // linkProperties.addControlParam('\$ios_deeplink_path', 'happyHourApp');
+    // linkProperties.addControlParam(
+    //     '\$desktop_url', 'https://xfnef.app.link/happyHourApp');
 
-    BranchResponse response = await FlutterBranchSdk.getShortUrl(
-      buo: buo,
-      linkProperties: linkProperties,
-    );
+    // BranchResponse response = await FlutterBranchSdk.getShortUrl(
+    //   buo: buo,
+    //   linkProperties: linkProperties,
+    // );
 
-    if (response.success) {
-      final generatedLink = response.result;
-      content += generatedLink;
-      Share.share(content);
-    } else {
-      print('Error: ${response.errorMessage}');
-    }
+    // if (response.success) {
+    content += "http://xfnef.app.link/happyHourApp";
+    Share.share(content);
+    // }
   }
 
   @override

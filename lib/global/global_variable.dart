@@ -19,6 +19,8 @@ final selectedMonthNotifier = ValueNotifier<DateTime>(DateTime.now());
 
 final selectedStatsYearNotifier = ValueNotifier<int>(DateTime.now().year);
 
+final isAllTimeViewNotifier = ValueNotifier<bool>(true);
+
 var showAdMobGlobally = ValueNotifier<bool>(true);
 
 Future checkConectivity() async {
