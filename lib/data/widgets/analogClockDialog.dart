@@ -106,17 +106,23 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
         ),
         TextButton(
           onPressed: () {
-            // Check if the selected time is in the future
-            if (_selectedTime.isAfter(DateTime.now())) {
+            // Get cutoff time components
+            String cutoffTimeStr = selectedCutoffTimeGlobally;
+            List<String> timeParts = cutoffTimeStr.split(':');
+            int cutoffHour = int.parse(timeParts[0]);
+
+            // Check if selected time is between midnight and cutoff
+            if (_selectedTime.hour >= 0 && _selectedTime.hour < cutoffHour) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("You can't select a future time."),
+                SnackBar(
+                  content: Text(
+                      'Cannot select time between 12:00 AM and $cutoffTimeStr'),
                 ),
               );
-              return; // Don't close the dialog
+              return; // Don't close dialog or update time
             }
 
-            // Pass the updated _selectedTime to the callback
+            // If time is valid, proceed with selection
             widget.onTimeSelected(_selectedTime);
             Navigator.pop(context);
           },

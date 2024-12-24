@@ -49,7 +49,7 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
               drink.dateTime.year == selectedMonth.year &&
               drink.dateTime.month == selectedMonth.month)
           .toList();
-      timeTitle = DateFormat('MMMM yyyy').format(selectedMonth);
+      timeTitle = DateFormat('MMM yyyy').format(selectedMonth);
     } else {
       final currentDate = DateTime.now();
       drinksToShare = box.values
@@ -57,7 +57,7 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
               drink.dateTime.year == currentDate.year &&
               drink.dateTime.month == currentDate.month)
           .toList();
-      timeTitle = DateFormat('MMMM yyyy').format(currentDate);
+      timeTitle = DateFormat('MMM yyyy').format(currentDate);
     }
 
     Map<String, int> drinkCounts = {
@@ -75,7 +75,9 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
 
     String content = "Happy Hour\n";
     content += "$timeTitle\n";
-    content += "${drinksToShare.length} drinks\n";
+    content += drinksToShare.length == 1
+        ? "${drinksToShare.length} drink\n"
+        : "${drinksToShare.length} drinks\n";
 
     // New format for drink counts
     for (var drink in sortedDrinks) {

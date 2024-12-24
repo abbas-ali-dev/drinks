@@ -715,6 +715,7 @@ class _HomePageState extends State<HomePage> {
 
     String content = "Happy Hour\n";
     content += DateFormat('E MM/dd/yy').format(selectedDate);
+
     content += "\n";
 
     // Add drink icons with line break after every 5 drinks
@@ -728,7 +729,9 @@ class _HomePageState extends State<HomePage> {
               ? '🍷'
               : '🍸';
     }
-    content += "\n";
+    if (selectedDateDrinks.isNotEmpty) {
+      content += "\n";
+    }
 
     // Instead of generating dynamic Branch link, use the fixed URL
     content += "http://xfnef.app.link/happyHourApp";
