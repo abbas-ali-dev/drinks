@@ -187,30 +187,34 @@ class _StatsPageState extends State<StatsPage> {
           Expanded(
             child: Scaffold(
               appBar: AppBar(
-                leading: IconButton(
-                  color: Colors.white,
-                  icon: const Icon(Icons.arrow_back_ios, size: 40),
-                  onPressed: () {
-                    setState(() {
-                      if (isAllTimeViewNotifier.value) {
-                        isAllTimeViewNotifier.value = false;
-                        selectedYear = _getAvailableYears().last;
-                        print(selectedYear.toString());
-                      } else {
-                        int currentIndex =
-                            _getAvailableYears().indexOf(selectedYear);
-                        if (currentIndex > 0) {
-                          selectedYear = _getAvailableYears()[currentIndex - 1];
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: IconButton(
+                    // Update color logic here
+                    color: (isAllTimeViewNotifier.value ||
+                            _getAvailableYears().indexOf(selectedYear) > 0)
+                        ? Colors.white
+                        : Colors.grey[700],
+                    icon: const Icon(Icons.arrow_back_ios, size: 40),
+                    onPressed: () {
+                      setState(() {
+                        if (isAllTimeViewNotifier.value) {
+                          isAllTimeViewNotifier.value = false;
+                          selectedYear = _getAvailableYears().last;
+                        } else {
+                          int currentIndex =
+                              _getAvailableYears().indexOf(selectedYear);
+                          if (currentIndex > 0) {
+                            selectedYear =
+                                _getAvailableYears()[currentIndex - 1];
+                          }
                         }
-                        print(selectedYear.toString());
-                      }
-                      _calculateStats(
-                          isAllTimeViewNotifier.value ? null : selectedYear);
-                      print("---->${selectedYear.toString()}");
-                      selectedStatsYearNotifier.value = selectedYear;
-                      print(selectedStatsYearNotifier.value.toString());
-                    });
-                  },
+                        _calculateStats(
+                            isAllTimeViewNotifier.value ? null : selectedYear);
+                        selectedStatsYearNotifier.value = selectedYear;
+                      });
+                    },
+                  ),
                 ),
                 title: Text(
                   isAllTimeViewNotifier.value

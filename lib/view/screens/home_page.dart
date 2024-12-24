@@ -421,13 +421,16 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                  leading: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios,
-                      size: 40,
-                      color: Colors.white,
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 10.0),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back_ios,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                      onPressed: _goToPreviousDay,
                     ),
-                    onPressed: _goToPreviousDay,
                   ),
                   actions: [
                     IconButton(
@@ -450,10 +453,20 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _showDrinkSelection = false;
+                            });
+                          },
                           onHorizontalDragEnd: (DragEndDetails details) {
-                            if (details.primaryVelocity! < 0 ||
-                                _drinksForSelectedDate.isEmpty) {
-                              // Right to left swipe - Show notes
+                            // Check if any drinks have notes
+                            bool hasNotes = _drinksForSelectedDate.any(
+                                (drink) =>
+                                    drink['note'] != null &&
+                                    drink['note'].toString().isNotEmpty);
+
+                            if (details.primaryVelocity! < 0 && hasNotes) {
+                              // Only toggle notes if there are drinks with notes
                               setState(() {
                                 _showNotes = !_showNotes;
                               });

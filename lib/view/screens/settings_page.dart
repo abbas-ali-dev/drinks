@@ -87,194 +87,197 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               body: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Preferences',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Column(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Preferences',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Time Format',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                              SizedBox(height: 8),
+                              SizedBox(
+                                  width: 200,
+                                  child: Text(
+                                      'Toggle between 12 hour and 24 hour time format',
+                                      style: TextStyle(color: Colors.white))),
+                            ],
+                          ),
+                          SizedBox(
+                            width: 20.w,
+                            child: DropdownButton<String>(
+                              value: selectedTimeFormatGlobally,
+                              dropdownColor: Colors.grey[800],
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                              underline: Container(
+                                height: 2,
+                                color: Colors.white,
+                              ),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedTimeFormatGlobally = newValue!;
+                                  // Save to Hive:
+                                  Hive.box('settingsBox')
+                                      .put('timeFormat', newValue);
+                                });
+                                // Navigator.pushAndRemoveUntil(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) => const HomePage(),
+                                //   ),
+                                //   (route) => false,
+                                // );
+                              },
+                              items: _timeFormats.map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Cutoff Time',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                              SizedBox(height: 8),
+                              SizedBox(
+                                  width: 200,
+                                  child: Text(
+                                      'Choose the time when drinks are considered the following day',
+                                      style: TextStyle(color: Colors.white))),
+                            ],
+                          ),
+                          SizedBox(
+                            width: 20.w,
+                            child: DropdownButton<String>(
+                              value: selectedCutoffTimeGlobally,
+                              dropdownColor: Colors.grey[800],
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                              underline: Container(
+                                height: 2,
+                                color: Colors.white,
+                              ),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedCutoffTimeGlobally = newValue!;
+                                  // Save to Hive:
+                                  Hive.box('settingsBox')
+                                      .put('cutoffTime', newValue);
+                                });
+                                debugPrint(
+                                    'Selected cutoff time: $selectedCutoffTimeGlobally');
+                              },
+                              items: _cutoffTimes.map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 40),
+                      const Text(
+                        'Other',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () {
+                          _launchEmail();
+                        },
+                        child: const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Time Format',
+                              'Feedback',
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white),
                             ),
                             SizedBox(height: 8),
-                            SizedBox(
-                                width: 200,
-                                child: Text(
-                                    'Toggle between 12 hour and 24 hour time format',
-                                    style: TextStyle(color: Colors.white))),
+                            Text(
+                              'Please send any feedback to halfpriceappz@gmail.com',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ],
                         ),
-                        SizedBox(
-                          width: 20.w,
-                          child: DropdownButton<String>(
-                            value: selectedTimeFormatGlobally,
-                            dropdownColor: Colors.grey[800],
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                            underline: Container(
-                              height: 2,
-                              color: Colors.white,
-                            ),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                selectedTimeFormatGlobally = newValue!;
-                                // Save to Hive:
-                                Hive.box('settingsBox')
-                                    .put('timeFormat', newValue);
-                              });
-                              // Navigator.pushAndRemoveUntil(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder: (context) => const HomePage(),
-                              //   ),
-                              //   (route) => false,
-                              // );
-                            },
-                            items: _timeFormats.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Column(
+                      ),
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () {
+                          _showClearDataConfirmationDialog(context);
+                        },
+                        child: const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Cutoff Time',
+                              'Clear All Data',
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white),
                             ),
                             SizedBox(height: 8),
-                            SizedBox(
-                                width: 200,
-                                child: Text(
-                                    'Choose the time when drinks are considered the following day',
-                                    style: TextStyle(color: Colors.white))),
+                            Text(
+                              'Clear all stored drinks',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ],
                         ),
-                        SizedBox(
-                          width: 20.w,
-                          child: DropdownButton<String>(
-                            value: selectedCutoffTimeGlobally,
-                            dropdownColor: Colors.grey[800],
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                            underline: Container(
-                              height: 2,
-                              color: Colors.white,
-                            ),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                selectedCutoffTimeGlobally = newValue!;
-                                // Save to Hive:
-                                Hive.box('settingsBox')
-                                    .put('cutoffTime', newValue);
-                              });
-                              debugPrint(
-                                  'Selected cutoff time: $selectedCutoffTimeGlobally');
-                            },
-                            items: _cutoffTimes.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
-                    const Text(
-                      'Other',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: () {
-                        _launchEmail();
-                      },
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Feedback',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Please send any feedback to halfpriceappz@gmail.com',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: () {
-                        _showClearDataConfirmationDialog(context);
-                      },
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Clear All Data',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Clear all stored drinks',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Version',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Version',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('1.0.0', style: TextStyle(color: Colors.white)),
-                  ],
+                      const SizedBox(height: 8),
+                      const Text('1.0.0',
+                          style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
                 ),
               ),
               bottomNavigationBar: BottomAppBar(

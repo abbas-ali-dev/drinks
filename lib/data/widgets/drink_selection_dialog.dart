@@ -104,7 +104,10 @@ class _DrinkSelectionDialogState extends State<DrinkSelectionDialog> {
                 height: 6.h,
                 width: 60.w,
                 child: ElevatedButton(
-                  onPressed: widget.onDeleteDrink,
+                  onPressed: () {
+                    widget.onDeleteDrink();
+                    setState(() {});
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                   ),

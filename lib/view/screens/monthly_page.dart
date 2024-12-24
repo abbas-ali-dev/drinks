@@ -18,8 +18,10 @@ class MonthlyPage extends StatefulWidget {
 }
 
 class MonthlyPageState extends State<MonthlyPage> {
+  // Add ScrollController
+  final ScrollController _scrollController = ScrollController();
+
   BannerAd? _bannerAd;
-  final DateTime _selectedDate = DateTime.now();
   DateTime _currentDate = DateTime.now();
   final List<String> drinkIcons = ['🍸', '🍷', '🍺'];
   final List<String> drinkTypes = ['drink', 'wine', 'beer'];
@@ -67,6 +69,14 @@ class MonthlyPageState extends State<MonthlyPage> {
     _drinksBox = Hive.box<Drink>('drinksBox');
     _calculateMonthlyDrinkCounts(_currentDate);
     selectedMonthNotifier.value = _currentDate;
+    // Add this to initState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   bool _hasDrinks(DateTime date) {
@@ -270,6 +280,7 @@ class MonthlyPageState extends State<MonthlyPage> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _bannerAd?.dispose();
     super.dispose();
   }
@@ -283,12 +294,15 @@ class MonthlyPageState extends State<MonthlyPage> {
           Expanded(
             child: Scaffold(
               appBar: AppBar(
-                leading: IconButton(
-                  color: Colors.white,
-                  icon: const Icon(Icons.arrow_back, size: 40),
-                  onPressed: () {
-                    _goToPreviousMonth();
-                  },
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: IconButton(
+                    color: Colors.white,
+                    icon: const Icon(Icons.arrow_back_ios, size: 40),
+                    onPressed: () {
+                      _goToPreviousMonth();
+                    },
+                  ),
                 ),
                 title: GestureDetector(
                   onTap: _selectMonthYear,
@@ -315,7 +329,7 @@ class MonthlyPageState extends State<MonthlyPage> {
                 actions: [
                   IconButton(
                     color: Colors.white,
-                    icon: const Icon(Icons.arrow_forward, size: 40),
+                    icon: const Icon(Icons.arrow_forward_ios, size: 40),
                     // Disable forward arrow if current month is displayed
                     onPressed: _currentDate.year == DateTime.now().year &&
                             _currentDate.month == DateTime.now().month
@@ -328,6 +342,7 @@ class MonthlyPageState extends State<MonthlyPage> {
               ),
               body: Container(
                 color: Colors.black,
+                padding: const EdgeInsets.only(bottom: 10),
                 child: _buildMonthView(_currentDate),
               ),
               bottomNavigationBar: const CustomBottumNavigationBar(),
@@ -343,16 +358,16 @@ class MonthlyPageState extends State<MonthlyPage> {
     Map<int, int> dailyDrinkCounts = _calculateDailyDrinkCounts(monthDate);
     int firstDayWeekday = DateTime(monthDate.year, monthDate.month, 1).weekday;
     int offset = firstDayWeekday - 0;
-
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
-          child: ConstrainedBox(
+          controller: _scrollController,
+          child: Container(
+            // Set a minimum height equal to the screen height
             constraints: BoxConstraints(
               minHeight: constraints.maxHeight,
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildMonthSummarySection(
                   monthName: doublepreviousMonthName,
@@ -457,7 +472,7 @@ class MonthlyPageState extends State<MonthlyPage> {
                   shrinkWrap: true,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 7,
-                    childAspectRatio: 1.7,
+                    childAspectRatio: 2,
                   ),
                   itemBuilder: (context, dayIndex) {
                     // Apply the offset to align days correctly
