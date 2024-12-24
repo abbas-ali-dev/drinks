@@ -235,13 +235,33 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   final arguments = ModalRoute.of(context)?.settings.arguments;
+  //   if (arguments is DateTime) {
+  //     setState(() {
+  //       _selectedDate = arguments;
+  //     });
+  //     _loadDrinksForDate(_selectedDate);
+  //   }
+  // }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final arguments = ModalRoute.of(context)?.settings.arguments;
     if (arguments is DateTime) {
+      // Create a new DateTime object with noon time to ensure consistent date handling
+      DateTime adjustedDate = DateTime(
+        arguments.year,
+        arguments.month,
+        arguments.day,
+        12, // Set to noon
+      );
+
       setState(() {
-        _selectedDate = arguments;
+        _selectedDate = adjustedDate;
       });
       _loadDrinksForDate(_selectedDate);
     }
@@ -538,22 +558,25 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.white,
                         height: 3,
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _showDrinksPerHour = !_showDrinksPerHour;
-                          });
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Text(
-                            _showDrinksPerHour
-                                ? '${_calculateDrinksPerHour()} Drinks/Hour'
-                                : '${_drinksForSelectedDate.length} Drinks',
-                            style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
+                      Visibility(
+                        visible: !_showDrinkSelection,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _showDrinksPerHour = !_showDrinksPerHour;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Text(
+                              _showDrinksPerHour
+                                  ? '${_calculateDrinksPerHour()} Drinks/Hour'
+                                  : '${_drinksForSelectedDate.length} Drinks',
+                              style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
                           ),
                         ),
                       ),
