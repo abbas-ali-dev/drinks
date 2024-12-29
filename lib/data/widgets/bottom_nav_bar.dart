@@ -112,6 +112,7 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
       buo: buo,
       linkProperties: linkProperties,
     );
+
     // if (response.success) {
     //   final generatedLink = response.result;
     //   content += generatedLink;
