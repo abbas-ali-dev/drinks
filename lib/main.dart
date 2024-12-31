@@ -1,4 +1,5 @@
 import 'package:drinks/models/drink_model.dart';
+import 'package:drinks/view/haier_mall/coin_history_screen.dart';
 import 'package:drinks/view/screens/home_page.dart';
 import 'package:easy_splash_screen/easy_splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:sizer/sizer.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+import 'view/haier_mall/daily_checkIn_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

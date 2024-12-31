@@ -104,66 +104,51 @@ class _HomePageState extends State<HomePage> {
     return int.parse(minuteStr);
   }
 
-  void _loadDrinksForDate(DateTime date) {
-    final box = Hive.box<Drink>('drinksBox');
-
-    int cutoffHour = getCutoffHour();
-    int cutoffMinutes = getCutoffMinutes();
-
-    // Start time is cutoff time of selected date
-    DateTime startDateTime = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      cutoffHour,
-      cutoffMinutes,
-    );
-
-    // End time is cutoff time of next date
-    DateTime endDateTime = startDateTime.add(const Duration(days: 1));
-
-    final drinksFromHive = box.values.where((drink) {
-      return drink.dateTime.isAfter(startDateTime) &&
-          drink.dateTime.isBefore(endDateTime);
-    }).toList();
-
-    setState(() {
-      _drinksForSelectedDate = drinksFromHive.map((drink) {
-        return {
-          'type': drink.drinkType,
-          'time': selectedTimeFormatGlobally == '12 Hour'
-              ? DateFormat.jm().format(drink.dateTime.toLocal())
-              : DateFormat('HH:mm').format(drink.dateTime),
-          'dateTime': drink.dateTime,
-          'note': drink.note,
-        };
-      }).toList();
-
-      _drinksForSelectedDate.sort((a, b) =>
-          (a['dateTime'] as DateTime).compareTo(b['dateTime'] as DateTime));
-    });
-  }
-
   void _addDrink() {
     setState(() {
       if (selectedDrinkIndex != null) {
-        int cutoffHour = getCutoffHour();
-        int cutoffMinutes = getCutoffMinutes();
         DateTime now = DateTime.now();
+        DateTime drinkDateTime;
 
-        // Create drink with current time but using selected date
-        DateTime drinkDateTime = DateTime(
-          _selectedDate.year,
-          _selectedDate.month,
-          _selectedDate.day,
-          now.hour,
-          now.minute,
-        );
+        // Get adjusted current date based on cutoff time
+        DateTime adjustedNow = getAdjustedDate(now);
+        DateTime adjustedSelectedDate = getAdjustedDate(_selectedDate);
 
-        // Adjust date based on cutoff time
-        if (now.hour < cutoffHour ||
-            (now.hour == cutoffHour && now.minute < cutoffMinutes)) {
-          drinkDateTime = drinkDateTime.add(const Duration(days: 1));
+        // Check if selected date is before adjusted current date
+        bool isPreviousDate = adjustedSelectedDate.isBefore(adjustedNow);
+
+        if (isPreviousDate) {
+          if (_drinksForSelectedDate.isEmpty) {
+            // For previous date with no drinks, set to 6:00 PM
+            drinkDateTime = DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              18, // 6 PM
+              0,
+            );
+          } else {
+            // Add 1 hour after the last drink
+            DateTime lastDrinkTime = _drinksForSelectedDate.last['dateTime'];
+            drinkDateTime = lastDrinkTime.add(const Duration(hours: 1));
+          }
+        } else {
+          // Current date - keep existing cutoff time logic
+          int cutoffHour = getCutoffHour();
+          int cutoffMinutes = getCutoffMinutes();
+
+          drinkDateTime = DateTime(
+            _selectedDate.year,
+            _selectedDate.month,
+            _selectedDate.day,
+            now.hour,
+            now.minute,
+          );
+
+          if (now.hour < cutoffHour ||
+              (now.hour == cutoffHour && now.minute < cutoffMinutes)) {
+            drinkDateTime = drinkDateTime.add(const Duration(days: 1));
+          }
         }
 
         final newDrink = Drink(
@@ -228,24 +213,21 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (picked != null && picked != _selectedDate) {
+      // Create DateTime with noon time to avoid cutoff time adjustments
+      DateTime adjustedDate = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        12, // Set to noon
+        0,
+      );
+
       setState(() {
-        _selectedDate = picked;
-        _loadDrinksForDate(_selectedDate);
+        _selectedDate = adjustedDate;
+        _loadDrinksForDate(adjustedDate);
       });
     }
   }
-
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   final arguments = ModalRoute.of(context)?.settings.arguments;
-  //   if (arguments is DateTime) {
-  //     setState(() {
-  //       _selectedDate = arguments;
-  //     });
-  //     _loadDrinksForDate(_selectedDate);
-  //   }
-  // }
 
   @override
   void didChangeDependencies() {
@@ -301,6 +283,46 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _loadDrinksForDate(DateTime date) {
+    final box = Hive.box<Drink>('drinksBox');
+
+    int cutoffHour = getCutoffHour();
+    int cutoffMinutes = getCutoffMinutes();
+
+    // Start time is cutoff time of selected date
+    DateTime startDateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      cutoffHour,
+      cutoffMinutes,
+    );
+
+    // End time is cutoff time of next date
+    DateTime endDateTime = startDateTime.add(const Duration(days: 1));
+
+    final drinksFromHive = box.values.where((drink) {
+      return drink.dateTime.isAfter(startDateTime) &&
+          drink.dateTime.isBefore(endDateTime);
+    }).toList();
+
+    setState(() {
+      _drinksForSelectedDate = drinksFromHive.map((drink) {
+        return {
+          'type': drink.drinkType,
+          'time': selectedTimeFormatGlobally == '12 Hour'
+              ? DateFormat.jm().format(drink.dateTime.toLocal())
+              : DateFormat('HH:mm').format(drink.dateTime),
+          'dateTime': drink.dateTime,
+          'note': drink.note,
+        };
+      }).toList();
+
+      _drinksForSelectedDate.sort((a, b) =>
+          (a['dateTime'] as DateTime).compareTo(b['dateTime'] as DateTime));
+    });
+  }
+
   Future<void> _showTimePicker(int index) async {
     await showDialog<TimeOfDay>(
       context: context,
@@ -321,17 +343,29 @@ class _HomePageState extends State<HomePage> {
             if (drinkIndex != -1) {
               final oldDrink = box.getAt(drinkIndex);
               if (oldDrink != null) {
+                int cutoffHour = getCutoffHour();
+                int cutoffMinutes = getCutoffMinutes();
+
+                // Calculate the correct date based on selected time
+                DateTime baseDate = _selectedDate;
+                if (newTime.hour < cutoffHour ||
+                    (newTime.hour == cutoffHour &&
+                        newTime.minute < cutoffMinutes)) {
+                  baseDate = baseDate.add(const Duration(days: 1));
+                }
+
                 final newDrink = Drink(
                   dateTime: DateTime(
-                    _selectedDate.year,
-                    _selectedDate.month,
-                    _selectedDate.day,
+                    baseDate.year,
+                    baseDate.month,
+                    baseDate.day,
                     newTime.hour,
                     newTime.minute,
                   ),
                   drinkType: oldDrink.drinkType,
                   note: oldDrink.note,
                 );
+
                 box.putAt(drinkIndex, newDrink);
                 _loadDrinksForDate(_selectedDate);
               }
@@ -341,6 +375,90 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
+  // void _loadDrinksForDate(DateTime date) {
+  //   final box = Hive.box<Drink>('drinksBox');
+
+  //   int cutoffHour = getCutoffHour();
+  //   int cutoffMinutes = getCutoffMinutes();
+
+  //   // Start time is cutoff time of selected date
+  //   DateTime startDateTime = DateTime(
+  //     date.year,
+  //     date.month,
+  //     date.day,
+  //     cutoffHour,
+  //     cutoffMinutes,
+  //   );
+
+  //   // End time is cutoff time of next date
+  //   DateTime endDateTime = startDateTime.add(const Duration(days: 1));
+
+  //   final drinksFromHive = box.values.where((drink) {
+  //     return drink.dateTime.isAfter(startDateTime) &&
+  //         drink.dateTime.isBefore(endDateTime);
+  //   }).toList();
+
+  //   setState(() {
+  //     _drinksForSelectedDate = drinksFromHive.map((drink) {
+  //       return {
+  //         'type': drink.drinkType,
+  //         'time': selectedTimeFormatGlobally == '12 Hour'
+  //             ? DateFormat.jm().format(drink.dateTime.toLocal())
+  //             : DateFormat('HH:mm').format(drink.dateTime),
+  //         'dateTime': drink.dateTime,
+  //         'note': drink.note,
+  //       };
+  //     }).toList();
+
+  //     _drinksForSelectedDate.sort((a, b) =>
+  //         (a['dateTime'] as DateTime).compareTo(b['dateTime'] as DateTime));
+  //   });
+  // }
+
+  // Future<void> _showTimePicker(int index) async {
+  //   await showDialog<TimeOfDay>(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       DateTime? dateTime = _drinksForSelectedDate[index]['dateTime'];
+
+  //       return AnalogClockDialog(
+  //         initialTime: dateTime ?? DateTime.now(),
+  //         onTimeSelected: (DateTime newTime) {
+  //           final box = Hive.box<Drink>('drinksBox');
+  //           final allDrinks = box.values.toList();
+  //           final currentDrink = _drinksForSelectedDate[index];
+
+  //           final drinkIndex = allDrinks.indexWhere((drink) =>
+  //               drink.dateTime == currentDrink['dateTime'] &&
+  //               drink.drinkType == currentDrink['type']);
+
+  //           if (drinkIndex != -1) {
+  //             final oldDrink = box.getAt(drinkIndex);
+  //             if (oldDrink != null) {
+  //               final originalDate = currentDrink['dateTime'] as DateTime;
+
+  //               final newDrink = Drink(
+  //                 dateTime: DateTime(
+  //                   originalDate.year,
+  //                   originalDate.month,
+  //                   originalDate.day,
+  //                   newTime.hour,
+  //                   newTime.minute,
+  //                 ),
+  //                 drinkType: oldDrink.drinkType,
+  //                 note: oldDrink.note,
+  //               );
+  //               print("New Drinkss: ${newDrink.dateTime}");
+  //               box.putAt(drinkIndex, newDrink);
+  //               _loadDrinksForDate(_selectedDate);
+  //             }
+  //           }
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
   String _calculateDrinksPerHour() {
     if (_drinksForSelectedDate.isEmpty) return '0.0';
@@ -409,6 +527,12 @@ class _HomePageState extends State<HomePage> {
             _isMenuOpen = false;
           });
         }
+
+        if (_showDrinkSelection) {
+          setState(() {
+            _showDrinkSelection = false;
+          });
+        }
       },
       child: SafeArea(
         child: Column(
@@ -475,6 +599,7 @@ class _HomePageState extends State<HomePage> {
                         child: GestureDetector(
                           onTap: () {
                             setState(() {
+                              _isMenuOpen = false;
                               _showDrinkSelection = false;
                             });
                           },
@@ -569,9 +694,10 @@ class _HomePageState extends State<HomePage> {
                           child: Padding(
                             padding: const EdgeInsets.all(10.0),
                             child: Text(
-                              _showDrinksPerHour
-                                  ? '${_calculateDrinksPerHour()} Drinks/Hour'
-                                  : '${_drinksForSelectedDate.length} Drinks',
+                              // _showDrinksPerHour
+                              //     ? '${_calculateDrinksPerHour()} Drinks/Hour'
+                              //     :
+                              '${_drinksForSelectedDate.length} Drinks',
                               style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,

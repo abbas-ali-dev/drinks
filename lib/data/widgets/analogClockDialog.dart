@@ -106,24 +106,17 @@ class _AnalogClockDialogState extends State<AnalogClockDialog> {
         ),
         TextButton(
           onPressed: () {
-            // Get cutoff time components
-            String cutoffTimeStr = selectedCutoffTimeGlobally;
-            List<String> timeParts = cutoffTimeStr.split(':');
-            int cutoffHour = int.parse(timeParts[0]);
+            // Create new DateTime with only time changes, keeping original date
+            DateTime updatedTime = DateTime(
+              widget.initialTime.year,
+              widget.initialTime.month,
+              widget.initialTime.day,
+              _selectedTime.hour,
+              _selectedTime.minute,
+            );
 
-            // Check if selected time is between midnight and cutoff
-            if (_selectedTime.hour >= 0 && _selectedTime.hour < cutoffHour) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                      'Cannot select time between 12:00 AM and $cutoffTimeStr'),
-                ),
-              );
-              return; // Don't close dialog or update time
-            }
-
-            // If time is valid, proceed with selection
-            widget.onTimeSelected(_selectedTime);
+            widget.onTimeSelected(updatedTime);
+            print("updatedTime: $updatedTime");
             Navigator.pop(context);
           },
           child: const Text('OK', style: TextStyle(color: Colors.white)),
