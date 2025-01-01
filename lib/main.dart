@@ -1,5 +1,4 @@
 import 'package:drinks/models/drink_model.dart';
-import 'package:drinks/view/haier_mall/coin_history_screen.dart';
 import 'package:drinks/view/screens/home_page.dart';
 import 'package:easy_splash_screen/easy_splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +9,6 @@ import 'package:sizer/sizer.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import 'view/haier_mall/daily_checkIn_screen.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -19,7 +16,8 @@ void main() async {
     // useTestKey: false,
     enableLogging: true,
   );
-  FlutterBranchSdk.validateSDKIntegration();
+  // +++++++check if the SDK is integrated correctly++++++++++
+  // FlutterBranchSdk.validateSDKIntegration();
 
   await initializeDateFormatting(); // Initialize date formatting
   Intl.defaultLocale = 'en_US'; // Set the default locale to US English
@@ -48,6 +46,34 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
+  @override
+  void initState() {
+    super.initState();
+    listenDynamicLinks();
+  }
+
+  void listenDynamicLinks() {
+    FlutterBranchSdk.listSession().listen((data) {
+      if (data.containsKey('+clicked_branch_link') &&
+          data['+clicked_branch_link'] == true) {
+        print("Data: $data");
+        if (data.containsKey('date')) {
+          final dateStr = data['date'];
+          print("Date: $dateStr");
+          final date = DateTime.parse(dateStr);
+          Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomePage(),
+              settings: RouteSettings(arguments: date),
+            ),
+          );
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Sizer(

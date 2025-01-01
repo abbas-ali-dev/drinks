@@ -18,6 +18,10 @@
         <action android:name="android.intent.action.VIEW" />
         <data android:scheme="https" />
     </intent>
+     <intent>
+        <action android:name="android.intent.action.PROCESS_TEXT"/>
+        <data android:mimeType="text/plain"/>
+    </intent>
 </queries>
 
 <application
@@ -57,14 +61,15 @@
 
         <!-- Intent filters for deep linking with Branch -->
         <intent-filter android:autoVerify="true">
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.DEFAULT" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="https"
-                android:host="xfnef.app.link" />
+           <action android:name="android.intent.action.VIEW" />
+           <category android:name="android.intent.category.DEFAULT" />
+           <category android:name="android.intent.category.BROWSABLE" />
+           <data android:scheme="http" android:host="xfnef.app.link" />
+           <data android:scheme="https" android:host="xfnef.app.link" />
         </intent-filter>
 
-        <intent-filter>
+
+        <intent-filter android:autoVerify="true">
             <action android:name="android.intent.action.VIEW" />
             <category android:name="android.intent.category.DEFAULT" />
             <category android:name="android.intent.category.BROWSABLE" />
@@ -73,12 +78,14 @@
         </intent-filter>
 
         <!-- Custom URI Scheme for Deep Linking -->
-        <intent-filter>
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.DEFAULT" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="happyhour" android:host="app" android:pathPrefix="/home" />
+        <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Correct URI scheme for branch.io -->
+                <data android:scheme="happyHourApp" />
         </intent-filter>
+        
 
         <!-- Play Store Deep Linking -->
         <intent-filter>
@@ -96,12 +103,4 @@
         android:value="2" />
 
 </application>
-
-<queries>
-    <intent>
-        <action android:name="android.intent.action.PROCESS_TEXT"/>
-        <data android:mimeType="text/plain"/>
-    </intent>
-</queries>
-
 </manifest>

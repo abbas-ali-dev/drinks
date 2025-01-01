@@ -64,9 +64,7 @@ class _StatsPageState extends State<StatsPage> {
     latestDrinkTime = null;
 
     final drinks = _drinksBox.values.where((drink) {
-      if (year == null) {
-        return true;
-      }
+      if (year == null) return true;
       return drink.dateTime.year == year;
     }).toList();
 
@@ -75,10 +73,14 @@ class _StatsPageState extends State<StatsPage> {
     if (drinks.isNotEmpty) {
       firstDrinkDate = drinks.first.dateTime;
       lastDrinkDate = drinks.last.dateTime;
-      earliestDrinkTime = drinks.first.dateTime;
-      latestDrinkTime = drinks.last.dateTime;
 
       Map<DateTime, bool> drinkDays = {};
+
+      int cutoffHour = getCutoffHour();
+      int cutoffMinutes = getCutoffMinutes();
+
+      DateTime? earliestTimeOfDay;
+      DateTime? latestTimeOfDay;
 
       for (var drink in drinks) {
         totalDrinks++;
@@ -98,29 +100,45 @@ class _StatsPageState extends State<StatsPage> {
           adjustedDate.day,
         );
         drinkDays[dateKey] = true;
-        // Update earliest/latest drink times using adjusted date
-        if (earliestDrinkTime == null ||
-            adjustedDate.isBefore(earliestDrinkTime!)) {
-          earliestDrinkTime = drink.dateTime;
-        }
-        if (latestDrinkTime == null || adjustedDate.isAfter(latestDrinkTime!)) {
-          latestDrinkTime = drink.dateTime;
-        }
 
-        // DateTime dateKey = DateTime(
-        //   drink.dateTime.year,
-        //   drink.dateTime.month,
-        //   drink.dateTime.day,
-        // );
-        // drinkDays[dateKey] = true;
+        // Create reference time for cutoff
+        DateTime cutoffTime = DateTime(
+          2000,
+          1,
+          1,
+          cutoffHour,
+          cutoffMinutes,
+        );
 
-        // if (drink.dateTime.isBefore(earliestDrinkTime!)) {
-        //   earliestDrinkTime = drink.dateTime;
-        // }
-        // if (drink.dateTime.isAfter(latestDrinkTime!)) {
-        //   latestDrinkTime = drink.dateTime;
-        // }
+        // Normalize drink time to same reference date
+        DateTime normalizedTime = DateTime(
+          2000,
+          1,
+          1,
+          drink.dateTime.hour,
+          drink.dateTime.minute,
+        );
+
+        // If drink is before cutoff, it's a "late" drink
+        if (normalizedTime.isBefore(cutoffTime)) {
+          if (latestTimeOfDay == null ||
+              normalizedTime.isAfter(DateTime(
+                  2000, 1, 1, latestTimeOfDay.hour, latestTimeOfDay.minute))) {
+            latestTimeOfDay = drink.dateTime;
+          }
+        }
+        // If drink is after cutoff, it's an "early" drink
+        else {
+          if (earliestTimeOfDay == null ||
+              normalizedTime.isBefore(DateTime(2000, 1, 1,
+                  earliestTimeOfDay.hour, earliestTimeOfDay.minute))) {
+            earliestTimeOfDay = drink.dateTime;
+          }
+        }
       }
+
+      earliestDrinkTime = earliestTimeOfDay;
+      latestDrinkTime = latestTimeOfDay;
 
       // Calculate longest streak
       int currentStreak = 0;

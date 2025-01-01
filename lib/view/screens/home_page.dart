@@ -859,7 +859,35 @@ class _HomePageState extends State<HomePage> {
       content += "\n";
     }
 
-    // Instead of generating dynamic Branch link, use the fixed URL
+    BranchUniversalObject buo = BranchUniversalObject(
+      canonicalIdentifier: 'happyHourApp',
+      title: 'Happy Hour',
+      publiclyIndex: true,
+      locallyIndex: true,
+    );
+
+    BranchLinkProperties linkProperties = BranchLinkProperties(
+        channel: 'app', feature: 'share', campaign: 'happyHourApp');
+
+    linkProperties.addControlParam('\$deeplink_path', 'happyHourApp');
+    linkProperties.addControlParam('\$android_deeplink_path', 'happyHourApp');
+    linkProperties.addControlParam('\$ios_deeplink_path', 'happyHourApp');
+    linkProperties.addControlParam(
+        '\$desktop_deeplink_path', 'https://xfnef.app.link/happyHourApp');
+
+    BranchResponse response = await FlutterBranchSdk.getShortUrl(
+      buo: buo,
+      linkProperties: linkProperties,
+    );
+
+    // if (response.success) {
+    //   final generatedLink = response.result;
+    //   content += generatedLink;
+    //   Share.share(content);
+    // } else {
+    //   print('Error: ${response.errorMessage}');
+    // }
+
     content += "http://xfnef.app.link/happyHourApp";
     Share.share(content);
   }

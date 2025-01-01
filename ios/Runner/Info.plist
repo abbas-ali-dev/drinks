@@ -55,6 +55,18 @@
             <key>CFBundleURLName</key>
             <string>com.example.drinks</string>
         </dict>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>app.link</string>
+                <string>alternate.app.link</string>
+            </array>
+        </dict>
+    </array>
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+        <string>applinks:xfnef.app.link</string>
+        <string>applinks:xfnef-alternate.app.link</string>
     </array>
 </dict>
 </plist>
