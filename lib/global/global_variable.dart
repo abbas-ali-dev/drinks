@@ -35,3 +35,5 @@ Future checkConectivity() async {
     }
   });
 }
+
+final ValueNotifier<bool> isMenuOpenNotifier = ValueNotifier<bool>(false);

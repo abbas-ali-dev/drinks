@@ -292,60 +292,67 @@ class MonthlyPageState extends State<MonthlyPage> {
         children: [
           AdHelper.getBannerAdWidget(_bannerAd),
           Expanded(
-            child: Scaffold(
-              appBar: AppBar(
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: IconButton(
-                    color: Colors.white,
-                    icon: const Icon(Icons.arrow_back_ios, size: 40),
-                    onPressed: () {
-                      _goToPreviousMonth();
-                    },
+            child: GestureDetector(
+              onTap: () {
+                if (isMenuOpenNotifier.value) {
+                  isMenuOpenNotifier.value = false;
+                }
+              },
+              child: Scaffold(
+                appBar: AppBar(
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: IconButton(
+                      color: Colors.white,
+                      icon: const Icon(Icons.arrow_back_ios, size: 40),
+                      onPressed: () {
+                        _goToPreviousMonth();
+                      },
+                    ),
                   ),
+                  title: GestureDetector(
+                    onTap: _selectMonthYear,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _currentDate.monthName(),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 23,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          '${_currentDate.year}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 23,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    IconButton(
+                      color: Colors.white,
+                      icon: const Icon(Icons.arrow_forward_ios, size: 40),
+                      // Disable forward arrow if current month is displayed
+                      onPressed: _currentDate.year == DateTime.now().year &&
+                              _currentDate.month == DateTime.now().month
+                          ? null
+                          : _goToNextMonth,
+                    ),
+                  ],
+                  centerTitle: true,
+                  backgroundColor: Colors.grey[800],
                 ),
-                title: GestureDetector(
-                  onTap: _selectMonthYear,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _currentDate.monthName(),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 23,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        '${_currentDate.year}',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 23,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
+                body: Container(
+                  color: Colors.black,
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildMonthView(_currentDate),
                 ),
-                actions: [
-                  IconButton(
-                    color: Colors.white,
-                    icon: const Icon(Icons.arrow_forward_ios, size: 40),
-                    // Disable forward arrow if current month is displayed
-                    onPressed: _currentDate.year == DateTime.now().year &&
-                            _currentDate.month == DateTime.now().month
-                        ? null
-                        : _goToNextMonth,
-                  ),
-                ],
-                centerTitle: true,
-                backgroundColor: Colors.grey[800],
+                bottomNavigationBar: const CustomBottumNavigationBar(),
               ),
-              body: Container(
-                color: Colors.black,
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _buildMonthView(_currentDate),
-              ),
-              bottomNavigationBar: const CustomBottumNavigationBar(),
             ),
           ),
         ],

@@ -203,188 +203,197 @@ class _StatsPageState extends State<StatsPage> {
         children: [
           AdHelper.getBannerAdWidget(_bannerAd),
           Expanded(
-            child: Scaffold(
-              appBar: AppBar(
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: IconButton(
-                    // Update color logic here
-                    color: (isAllTimeViewNotifier.value ||
-                            _getAvailableYears().indexOf(selectedYear) > 0)
-                        ? Colors.white
-                        : Colors.grey[700],
-                    icon: const Icon(Icons.arrow_back_ios, size: 40),
-                    onPressed: () {
-                      setState(() {
-                        if (isAllTimeViewNotifier.value) {
-                          isAllTimeViewNotifier.value = false;
-                          selectedYear = _getAvailableYears().last;
-                        } else {
-                          int currentIndex =
-                              _getAvailableYears().indexOf(selectedYear);
-                          if (currentIndex > 0) {
-                            selectedYear =
-                                _getAvailableYears()[currentIndex - 1];
-                          }
-                        }
-                        _calculateStats(
-                            isAllTimeViewNotifier.value ? null : selectedYear);
-                        selectedStatsYearNotifier.value = selectedYear;
-                      });
-                    },
-                  ),
-                ),
-                title: Text(
-                  isAllTimeViewNotifier.value
-                      ? 'All Time'
-                      : selectedYear.toString(),
-                  style: const TextStyle(
-                      fontSize: 25,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-                actions: [
-                  IconButton(
-                    color: (!isAllTimeViewNotifier.value &&
-                            _getAvailableYears().indexOf(selectedYear) <
-                                _getAvailableYears().length)
-                        ? Colors.white
-                        : Colors.grey[700],
-                    icon: const Icon(Icons.arrow_forward_ios, size: 40),
-                    onPressed: () {
-                      setState(() {
-                        if (!isAllTimeViewNotifier.value) {
-                          int currentIndex =
-                              _getAvailableYears().indexOf(selectedYear);
-                          if (currentIndex < _getAvailableYears().length - 1) {
-                            selectedYear =
-                                _getAvailableYears()[currentIndex + 1];
-                            _calculateStats(selectedYear);
+            child: GestureDetector(
+              onTap: () {
+                if (isMenuOpenNotifier.value) {
+                  isMenuOpenNotifier.value = false;
+                }
+              },
+              child: Scaffold(
+                appBar: AppBar(
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: IconButton(
+                      // Update color logic here
+                      color: (isAllTimeViewNotifier.value ||
+                              _getAvailableYears().indexOf(selectedYear) > 0)
+                          ? Colors.white
+                          : Colors.grey[700],
+                      icon: const Icon(Icons.arrow_back_ios, size: 40),
+                      onPressed: () {
+                        setState(() {
+                          if (isAllTimeViewNotifier.value) {
+                            isAllTimeViewNotifier.value = false;
+                            selectedYear = _getAvailableYears().last;
                           } else {
-                            isAllTimeViewNotifier.value = true;
-                            _calculateStats(null);
+                            int currentIndex =
+                                _getAvailableYears().indexOf(selectedYear);
+                            if (currentIndex > 0) {
+                              selectedYear =
+                                  _getAvailableYears()[currentIndex - 1];
+                            }
                           }
+                          _calculateStats(isAllTimeViewNotifier.value
+                              ? null
+                              : selectedYear);
                           selectedStatsYearNotifier.value = selectedYear;
-                        }
-                      });
-                    },
-                  ),
-                ],
-                centerTitle: true,
-                backgroundColor: Colors.grey[800],
-              ),
-              backgroundColor: Colors.black,
-              body: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        Expanded(
-                          child: InfoContainer(
-                            label: 'TOTAL DRINKS',
-                            value: totalDrinks.toString(),
-                          ),
-                        ),
-                        ...(() {
-                          List<Map<String, dynamic>> drinkCounts = [
-                            {'label': 'TOTAL LIQUOR', 'value': totalLiquor},
-                            {'label': 'TOTAL WINE', 'value': totalWine},
-                            {'label': 'TOTAL BEERS', 'value': totalBeers},
-                          ];
-
-                          // Sort in descending order based on value
-                          drinkCounts
-                              .sort((a, b) => b['value'].compareTo(a['value']));
-
-                          // Return sorted InfoContainers
-                          return drinkCounts
-                              .map((drink) => Expanded(
-                                    child: InfoContainer(
-                                      label: drink['label'],
-                                      value: drink['value'].toString(),
-                                    ),
-                                  ))
-                              .toList();
-                        })(),
-                        Expanded(
-                          child: InfoContainer(
-                            label: totalDrinkDays == 1
-                                ? 'DRINK DAY'
-                                : 'DRINK DAYS',
-                            value: totalDrinkDays.toString(),
-                          ),
-                        ),
-                        Expanded(
-                          child: InfoContainer(
-                            label: totalNonDrinkDays == 1
-                                ? 'NON-DRINK DAY'
-                                : 'NON-DRINK DAYS',
-                            value: totalNonDrinkDays <= 0
-                                ? '0'
-                                : totalNonDrinkDays.toString(),
-                          ),
-                        ),
-                      ],
+                        });
+                      },
                     ),
-                    Column(
-                      children: [
-                        Expanded(
-                          child: InfoContainer(
-                            label: 'LAST DRINK',
-                            value: lastDrinkDate != null
-                                ? _calculateDaysAgo(lastDrinkDate!)
-                                : 'N/A',
-                          ),
-                        ),
-                        Expanded(
-                          child: InfoContainer(
-                            label: 'FIRST DRINK',
-                            value: firstDrinkDate != null
-                                ? _calculateDaysAgo(firstDrinkDate!)
-                                : 'N/A',
-                          ),
-                        ),
-                        Expanded(
-                          child: InfoContainer(
-                            label: 'LONGEST STREAK',
-                            value: longestStreak == 1
-                                ? '1 day'
-                                : '$longestStreak days',
-                          ),
-                        ),
-                        Expanded(
-                          child: InfoContainer(
-                            label: 'LONGEST BREAK',
-                            value: longestBreak == 1
-                                ? '1 day'
-                                : '$longestBreak days',
-                          ),
-                        ),
-                        Expanded(
-                          child: InfoContainer(
-                            label: 'EARLIEST DRINK',
-                            value: earliestDrinkTime != null
-                                ? DateFormat.jm().format(earliestDrinkTime!)
-                                : 'N/A',
-                          ),
-                        ),
-                        Expanded(
-                          child: InfoContainer(
-                            label: 'LATEST DRINK',
-                            value: latestDrinkTime != null
-                                ? DateFormat.jm().format(latestDrinkTime!)
-                                : 'N/A',
-                          ),
-                        ),
-                      ],
+                  ),
+                  title: Text(
+                    isAllTimeViewNotifier.value
+                        ? 'All Time'
+                        : selectedYear.toString(),
+                    style: const TextStyle(
+                        fontSize: 25,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  actions: [
+                    IconButton(
+                      color: (!isAllTimeViewNotifier.value &&
+                              _getAvailableYears().indexOf(selectedYear) <
+                                  _getAvailableYears().length)
+                          ? Colors.white
+                          : Colors.grey[700],
+                      icon: const Icon(Icons.arrow_forward_ios, size: 40),
+                      onPressed: () {
+                        setState(() {
+                          if (!isAllTimeViewNotifier.value) {
+                            int currentIndex =
+                                _getAvailableYears().indexOf(selectedYear);
+                            if (currentIndex <
+                                _getAvailableYears().length - 1) {
+                              selectedYear =
+                                  _getAvailableYears()[currentIndex + 1];
+                              _calculateStats(selectedYear);
+                            } else {
+                              isAllTimeViewNotifier.value = true;
+                              _calculateStats(null);
+                            }
+                            selectedStatsYearNotifier.value = selectedYear;
+                          }
+                        });
+                      },
                     ),
                   ],
+                  centerTitle: true,
+                  backgroundColor: Colors.grey[800],
                 ),
+                backgroundColor: Colors.black,
+                body: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        children: [
+                          Expanded(
+                            child: InfoContainer(
+                              label: 'TOTAL DRINKS',
+                              value: totalDrinks.toString(),
+                            ),
+                          ),
+                          ...(() {
+                            List<Map<String, dynamic>> drinkCounts = [
+                              {'label': 'TOTAL LIQUOR', 'value': totalLiquor},
+                              {'label': 'TOTAL WINE', 'value': totalWine},
+                              {'label': 'TOTAL BEERS', 'value': totalBeers},
+                            ];
+
+                            // Sort in descending order based on value
+                            drinkCounts.sort(
+                                (a, b) => b['value'].compareTo(a['value']));
+
+                            // Return sorted InfoContainers
+                            return drinkCounts
+                                .map((drink) => Expanded(
+                                      child: InfoContainer(
+                                        label: drink['label'],
+                                        value: drink['value'].toString(),
+                                      ),
+                                    ))
+                                .toList();
+                          })(),
+                          Expanded(
+                            child: InfoContainer(
+                              label: totalDrinkDays == 1
+                                  ? 'DRINK DAY'
+                                  : 'DRINK DAYS',
+                              value: totalDrinkDays.toString(),
+                            ),
+                          ),
+                          Expanded(
+                            child: InfoContainer(
+                              label: totalNonDrinkDays == 1
+                                  ? 'NON-DRINK DAY'
+                                  : 'NON-DRINK DAYS',
+                              value: totalNonDrinkDays <= 0
+                                  ? '0'
+                                  : totalNonDrinkDays.toString(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Expanded(
+                            child: InfoContainer(
+                              label: 'LAST DRINK',
+                              value: lastDrinkDate != null
+                                  ? _calculateDaysAgo(lastDrinkDate!)
+                                  : 'N/A',
+                            ),
+                          ),
+                          Expanded(
+                            child: InfoContainer(
+                              label: 'FIRST DRINK',
+                              value: firstDrinkDate != null
+                                  ? _calculateDaysAgo(firstDrinkDate!)
+                                  : 'N/A',
+                            ),
+                          ),
+                          Expanded(
+                            child: InfoContainer(
+                              label: 'LONGEST STREAK',
+                              value: longestStreak == 1
+                                  ? '1 day'
+                                  : '$longestStreak days',
+                            ),
+                          ),
+                          Expanded(
+                            child: InfoContainer(
+                              label: 'LONGEST BREAK',
+                              value: longestBreak == 1
+                                  ? '1 day'
+                                  : '$longestBreak days',
+                            ),
+                          ),
+                          Expanded(
+                            child: InfoContainer(
+                              label: 'EARLIEST DRINK',
+                              value: earliestDrinkTime != null
+                                  ? DateFormat.jm().format(earliestDrinkTime!)
+                                  : 'N/A',
+                            ),
+                          ),
+                          Expanded(
+                            child: InfoContainer(
+                              label: 'LATEST DRINK',
+                              value: latestDrinkTime != null
+                                  ? DateFormat.jm().format(latestDrinkTime!)
+                                  : 'N/A',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                bottomNavigationBar: const CustomBottumNavigationBar(),
               ),
-              bottomNavigationBar: const CustomBottumNavigationBar(),
             ),
           ),
         ],

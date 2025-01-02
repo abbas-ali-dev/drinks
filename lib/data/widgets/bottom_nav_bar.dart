@@ -127,95 +127,112 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
 
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      color: Colors.grey[800],
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          IconButton(
-            icon: Icon(
-              _isMenuOpen ? Icons.calendar_month : Icons.menu,
-              color: Colors.white,
-              size: 40,
-            ),
-            onPressed: () {
-              if (_isMenuOpen) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MonthlyPage(),
-                    settings: const RouteSettings(name: 'MonthlyPage'),
-                  ),
-                );
-              } else {
-                setState(() {
-                  _isMenuOpen = true;
-                });
-              }
-            },
+    return ValueListenableBuilder(
+      valueListenable: isMenuOpenNotifier,
+      builder: (context, bool isOpen, _) {
+        return BottomAppBar(
+          color: Colors.grey[800],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                icon: Icon(
+                  isOpen ? Icons.calendar_month : Icons.menu,
+                  color: Colors.white,
+                  size: 40,
+                ),
+                onPressed: () {
+                  if (isOpen) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MonthlyPage(),
+                        settings: const RouteSettings(name: 'MonthlyPage'),
+                      ),
+                    );
+                    setState(() {
+                      isMenuOpenNotifier.value = false;
+                    });
+                  } else {
+                    setState(() {
+                      isMenuOpenNotifier.value = true;
+                    });
+                  }
+                },
+              ),
+              IconButton(
+                icon: isOpen
+                    ? const Icon(
+                        Icons.settings,
+                        color: Colors.white,
+                        size: 40,
+                      )
+                    : Image.asset(
+                        "assets/png/home.png",
+                        width: 40,
+                        height: 40,
+                        color: Colors.white,
+                      ),
+                onPressed: () {
+                  if (isOpen) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(),
+                        settings: const RouteSettings(name: 'SettingsPage'),
+                      ),
+                    );
+                    setState(() {
+                      isMenuOpenNotifier.value = false;
+                    });
+                  } else {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomePage(),
+                      ),
+                      (route) => false,
+                    );
+                    setState(() {
+                      isMenuOpenNotifier.value = false;
+                    });
+                  }
+                },
+              ),
+              IconButton(
+                icon: isOpen
+                    ? Image.asset(
+                        "assets/png/stats.png",
+                        width: 40,
+                        height: 40,
+                        color: Colors.white,
+                      )
+                    : const Icon(
+                        Icons.near_me_outlined,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                onPressed: () {
+                  if (isOpen) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StatsPage(),
+                        settings: const RouteSettings(name: 'StatsPage'),
+                      ),
+                    );
+                    setState(() {
+                      isMenuOpenNotifier.value = false;
+                    });
+                  } else {
+                    shareContent();
+                  }
+                },
+              ),
+            ],
           ),
-          IconButton(
-            icon: _isMenuOpen
-                ? const Icon(
-                    Icons.settings,
-                    color: Colors.white,
-                    size: 40,
-                  )
-                : Image.asset(
-                    "assets/png/home.png",
-                    width: 40,
-                    height: 40,
-                    color: Colors.white,
-                  ),
-            onPressed: () {
-              if (_isMenuOpen) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsPage(),
-                    settings: const RouteSettings(name: 'SettingsPage'),
-                  ),
-                );
-              } else {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HomePage(),
-                  ),
-                  (route) => false,
-                );
-              }
-            },
-          ),
-          IconButton(
-            icon: _isMenuOpen
-                ? Image.asset(
-                    "assets/png/stats.png",
-                    width: 40,
-                    height: 40,
-                    color: Colors.white,
-                  )
-                : const Icon(
-                    Icons.near_me_outlined,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-            onPressed: () {
-              if (_isMenuOpen) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const StatsPage(),
-                    settings: const RouteSettings(name: 'StatsPage'),
-                  ),
-                );
-              } else {
-                shareContent();
-              }
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
