@@ -325,8 +325,10 @@ class _HomePageState extends State<HomePage> {
     DateTime endDateTime = startDateTime.add(const Duration(days: 1));
 
     final drinksFromHive = box.values.where((drink) {
-      return drink.dateTime.isAfter(startDateTime) &&
-          drink.dateTime.isBefore(endDateTime);
+      return drink.dateTime.isAtSameMomentAs(
+              startDateTime) || // Include drinks at the exact cutoff time
+          (drink.dateTime.isAfter(startDateTime) &&
+              drink.dateTime.isBefore(endDateTime));
     }).toList();
 
     setState(() {
