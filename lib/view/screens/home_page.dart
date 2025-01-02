@@ -229,25 +229,48 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  DateTime? _initialDateFromArgs; // Store initial date from route arguments
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is DateTime) {
-      // Create a new DateTime object with noon time to ensure consistent date handling
+
+    if (arguments is DateTime && _initialDateFromArgs == null) {
+      // Only set if _initialDateFromArgs is null. It means this is the initial page load from MonthlyPage
+      _initialDateFromArgs = arguments; // Store initial date separately
+
       DateTime adjustedDate = DateTime(
         arguments.year,
         arguments.month,
         arguments.day,
         12, // Set to noon
       );
-
       setState(() {
         _selectedDate = adjustedDate;
       });
-      _loadDrinksForDate(_selectedDate);
+      _loadDrinksForDate(_selectedDate); //Load only once
     }
   }
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   final arguments = ModalRoute.of(context)?.settings.arguments;
+  //   if (arguments is DateTime) {
+  //     // Create a new DateTime object with noon time to ensure consistent date handling
+  //     DateTime adjustedDate = DateTime(
+  //       arguments.year,
+  //       arguments.month,
+  //       arguments.day,
+  //       12, // Set to noon
+  //     );
+
+  //     setState(() {
+  //       _selectedDate = adjustedDate;
+  //     });
+  //     _loadDrinksForDate(_selectedDate);
+  //   }
+  // }
 
   Future<void> _showDrinkChangeDialog(int index) async {
     final box = Hive.box<Drink>('drinksBox');
@@ -322,6 +345,61 @@ class _HomePageState extends State<HomePage> {
           (a['dateTime'] as DateTime).compareTo(b['dateTime'] as DateTime));
     });
   }
+
+  // Future<void> _showTimePicker(int index) async {
+  //   if (_drinksForSelectedDate.isEmpty ||
+  //       index >= _drinksForSelectedDate.length) return;
+
+  //   final currentDrink = _drinksForSelectedDate[index];
+  //   final DateTime originalDateTime = currentDrink['dateTime'];
+
+  //   await showDialog<TimeOfDay>(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AnalogClockDialog(
+  //         initialTime: originalDateTime,
+  //         onTimeSelected: (DateTime newTime) {
+  //           final box = Hive.box<Drink>('drinksBox');
+  //           final allDrinks = box.values.toList();
+
+  //           final drinkIndex = allDrinks.indexWhere((drink) =>
+  //               drink.dateTime == currentDrink['dateTime'] &&
+  //               drink.drinkType == currentDrink['type']);
+
+  //           if (drinkIndex != -1) {
+  //             final oldDrink = box.getAt(drinkIndex);
+  //             if (oldDrink != null) {
+  //               int cutoffHour = getCutoffHour();
+  //               int cutoffMinutes = getCutoffMinutes();
+
+  //               DateTime baseDate = _selectedDate;
+  //               if (newTime.hour < cutoffHour ||
+  //                   (newTime.hour == cutoffHour &&
+  //                       newTime.minute < cutoffMinutes)) {
+  //                 baseDate = baseDate.add(const Duration(days: 1));
+  //               }
+
+  //               final newDrink = Drink(
+  //                 dateTime: DateTime(
+  //                   baseDate.year,
+  //                   baseDate.month,
+  //                   baseDate.day,
+  //                   newTime.hour,
+  //                   newTime.minute,
+  //                 ),
+  //                 drinkType: oldDrink.drinkType,
+  //                 note: oldDrink.note,
+  //               );
+
+  //               box.putAt(drinkIndex, newDrink);
+  //               _loadDrinksForDate(_selectedDate);
+  //             }
+  //           }
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> _showTimePicker(int index) async {
     await showDialog<TimeOfDay>(
