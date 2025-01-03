@@ -214,12 +214,13 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
                       ),
                 onPressed: () {
                   if (isOpen) {
-                    Navigator.push(
+                    Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const StatsPage(),
                         settings: const RouteSettings(name: 'StatsPage'),
                       ),
+                      (route) => false,
                     );
                     setState(() {
                       isMenuOpenNotifier.value = false;

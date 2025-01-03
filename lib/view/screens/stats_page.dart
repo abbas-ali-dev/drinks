@@ -200,6 +200,7 @@ class _StatsPageState extends State<StatsPage> {
   @override
   void dispose() {
     _bannerAd?.dispose();
+    isAllTimeViewNotifier.value = true;
     super.dispose();
   }
 
