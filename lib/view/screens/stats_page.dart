@@ -79,6 +79,7 @@ class _StatsPageState extends State<StatsPage> {
       int cutoffHour = getCutoffHour();
       int cutoffMinutes = getCutoffMinutes();
 
+      DateTime cutoffTime = DateTime(2000, 1, 1, cutoffHour, cutoffMinutes);
       DateTime? earliestTimeOfDay;
       DateTime? latestTimeOfDay;
 
@@ -101,38 +102,44 @@ class _StatsPageState extends State<StatsPage> {
         );
         drinkDays[dateKey] = true;
 
-        // Create reference time for cutoff
-        DateTime cutoffTime = DateTime(
-          2000,
-          1,
-          1,
-          cutoffHour,
-          cutoffMinutes,
-        );
+        // Normalize drink time to same reference date for comparison
+        DateTime normalizedTime =
+            DateTime(2000, 1, 1, drink.dateTime.hour, drink.dateTime.minute);
 
-        // Normalize drink time to same reference date
-        DateTime normalizedTime = DateTime(
-          2000,
-          1,
-          1,
-          drink.dateTime.hour,
-          drink.dateTime.minute,
-        );
-
-        // If drink is before cutoff, it's a "late" drink
+        // Adjust comparison based on cutoff time
         if (normalizedTime.isBefore(cutoffTime)) {
+          // This is a "late" drink (before cutoff)
           if (latestTimeOfDay == null ||
               normalizedTime.isAfter(DateTime(
                   2000, 1, 1, latestTimeOfDay.hour, latestTimeOfDay.minute))) {
             latestTimeOfDay = drink.dateTime;
           }
-        }
-        // If drink is after cutoff, it's an "early" drink
-        else {
+        } else {
+          // This is an "early" drink (after cutoff)
           if (earliestTimeOfDay == null ||
               normalizedTime.isBefore(DateTime(2000, 1, 1,
                   earliestTimeOfDay.hour, earliestTimeOfDay.minute))) {
             earliestTimeOfDay = drink.dateTime;
+          }
+        }
+      }
+
+      // If we haven't found any drinks in either category, use all drinks for comparison
+      if (earliestTimeOfDay == null || latestTimeOfDay == null) {
+        for (var drink in drinks) {
+          DateTime normalizedTime =
+              DateTime(2000, 1, 1, drink.dateTime.hour, drink.dateTime.minute);
+
+          if (earliestTimeOfDay == null ||
+              normalizedTime.isBefore(DateTime(2000, 1, 1,
+                  earliestTimeOfDay.hour, earliestTimeOfDay.minute))) {
+            earliestTimeOfDay = drink.dateTime;
+          }
+
+          if (latestTimeOfDay == null ||
+              normalizedTime.isAfter(DateTime(
+                  2000, 1, 1, latestTimeOfDay.hour, latestTimeOfDay.minute))) {
+            latestTimeOfDay = drink.dateTime;
           }
         }
       }
