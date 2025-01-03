@@ -910,18 +910,34 @@ class _HomePageState extends State<HomePage> {
 
   void shareContent() async {
     final box = Hive.box<Drink>('drinksBox');
-    final selectedDate = _selectedDate;
 
-    final selectedDateDrinks = box.values
-        .where((drink) =>
-            drink.dateTime.year == selectedDate.year &&
-            drink.dateTime.month == selectedDate.month &&
-            drink.dateTime.day == selectedDate.day)
-        .toList();
+    int cutoffHour = getCutoffHour();
+    int cutoffMinutes = getCutoffMinutes();
+
+    // Start time is cutoff time of selected date
+    DateTime startDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      cutoffHour,
+      cutoffMinutes,
+    );
+
+    // End time is cutoff time of next date
+    DateTime endDateTime = startDateTime.add(const Duration(days: 1));
+
+    // Get drinks using same logic as homepage
+    final selectedDateDrinks = box.values.where((drink) {
+      return drink.dateTime.isAtSameMomentAs(startDateTime) ||
+          (drink.dateTime.isAfter(startDateTime) &&
+              drink.dateTime.isBefore(endDateTime));
+    }).toList();
+
+    // Sort drinks by time
+    selectedDateDrinks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     String content = "Happy Hour\n";
-    content += DateFormat('E MM/dd/yy').format(selectedDate);
-
+    content += DateFormat('E MM/dd/yy').format(_selectedDate);
     content += "\n";
 
     // Add drink icons with line break after every 5 drinks
@@ -938,35 +954,6 @@ class _HomePageState extends State<HomePage> {
     if (selectedDateDrinks.isNotEmpty) {
       content += "\n";
     }
-
-    BranchUniversalObject buo = BranchUniversalObject(
-      canonicalIdentifier: 'happyHourApp',
-      title: 'Happy Hour',
-      publiclyIndex: true,
-      locallyIndex: true,
-    );
-
-    BranchLinkProperties linkProperties = BranchLinkProperties(
-        channel: 'app', feature: 'share', campaign: 'happyHourApp');
-
-    linkProperties.addControlParam('\$deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam('\$android_deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam('\$ios_deeplink_path', 'happyHourApp');
-    linkProperties.addControlParam(
-        '\$desktop_deeplink_path', 'https://xfnef.app.link/happyHourApp');
-
-    BranchResponse response = await FlutterBranchSdk.getShortUrl(
-      buo: buo,
-      linkProperties: linkProperties,
-    );
-
-    // if (response.success) {
-    //   final generatedLink = response.result;
-    //   content += generatedLink;
-    //   Share.share(content);
-    // } else {
-    //   print('Error: ${response.errorMessage}');
-    // }
 
     content += "http://xfnef.app.link/happyHourApp";
     Share.share(content);
