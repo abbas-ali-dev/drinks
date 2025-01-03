@@ -252,25 +252,6 @@ class _HomePageState extends State<HomePage> {
       _loadDrinksForDate(_selectedDate); //Load only once
     }
   }
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   final arguments = ModalRoute.of(context)?.settings.arguments;
-  //   if (arguments is DateTime) {
-  //     // Create a new DateTime object with noon time to ensure consistent date handling
-  //     DateTime adjustedDate = DateTime(
-  //       arguments.year,
-  //       arguments.month,
-  //       arguments.day,
-  //       12, // Set to noon
-  //     );
-
-  //     setState(() {
-  //       _selectedDate = adjustedDate;
-  //     });
-  //     _loadDrinksForDate(_selectedDate);
-  //   }
-  // }
 
   Future<void> _showDrinkChangeDialog(int index) async {
     final box = Hive.box<Drink>('drinksBox');
@@ -348,61 +329,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // Future<void> _showTimePicker(int index) async {
-  //   if (_drinksForSelectedDate.isEmpty ||
-  //       index >= _drinksForSelectedDate.length) return;
-
-  //   final currentDrink = _drinksForSelectedDate[index];
-  //   final DateTime originalDateTime = currentDrink['dateTime'];
-
-  //   await showDialog<TimeOfDay>(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AnalogClockDialog(
-  //         initialTime: originalDateTime,
-  //         onTimeSelected: (DateTime newTime) {
-  //           final box = Hive.box<Drink>('drinksBox');
-  //           final allDrinks = box.values.toList();
-
-  //           final drinkIndex = allDrinks.indexWhere((drink) =>
-  //               drink.dateTime == currentDrink['dateTime'] &&
-  //               drink.drinkType == currentDrink['type']);
-
-  //           if (drinkIndex != -1) {
-  //             final oldDrink = box.getAt(drinkIndex);
-  //             if (oldDrink != null) {
-  //               int cutoffHour = getCutoffHour();
-  //               int cutoffMinutes = getCutoffMinutes();
-
-  //               DateTime baseDate = _selectedDate;
-  //               if (newTime.hour < cutoffHour ||
-  //                   (newTime.hour == cutoffHour &&
-  //                       newTime.minute < cutoffMinutes)) {
-  //                 baseDate = baseDate.add(const Duration(days: 1));
-  //               }
-
-  //               final newDrink = Drink(
-  //                 dateTime: DateTime(
-  //                   baseDate.year,
-  //                   baseDate.month,
-  //                   baseDate.day,
-  //                   newTime.hour,
-  //                   newTime.minute,
-  //                 ),
-  //                 drinkType: oldDrink.drinkType,
-  //                 note: oldDrink.note,
-  //               );
-
-  //               box.putAt(drinkIndex, newDrink);
-  //               _loadDrinksForDate(_selectedDate);
-  //             }
-  //           }
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
-
   Future<void> _showTimePicker(int index) async {
     await showDialog<TimeOfDay>(
       context: context,
@@ -455,90 +381,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
-  // void _loadDrinksForDate(DateTime date) {
-  //   final box = Hive.box<Drink>('drinksBox');
-
-  //   int cutoffHour = getCutoffHour();
-  //   int cutoffMinutes = getCutoffMinutes();
-
-  //   // Start time is cutoff time of selected date
-  //   DateTime startDateTime = DateTime(
-  //     date.year,
-  //     date.month,
-  //     date.day,
-  //     cutoffHour,
-  //     cutoffMinutes,
-  //   );
-
-  //   // End time is cutoff time of next date
-  //   DateTime endDateTime = startDateTime.add(const Duration(days: 1));
-
-  //   final drinksFromHive = box.values.where((drink) {
-  //     return drink.dateTime.isAfter(startDateTime) &&
-  //         drink.dateTime.isBefore(endDateTime);
-  //   }).toList();
-
-  //   setState(() {
-  //     _drinksForSelectedDate = drinksFromHive.map((drink) {
-  //       return {
-  //         'type': drink.drinkType,
-  //         'time': selectedTimeFormatGlobally == '12 Hour'
-  //             ? DateFormat.jm().format(drink.dateTime.toLocal())
-  //             : DateFormat('HH:mm').format(drink.dateTime),
-  //         'dateTime': drink.dateTime,
-  //         'note': drink.note,
-  //       };
-  //     }).toList();
-
-  //     _drinksForSelectedDate.sort((a, b) =>
-  //         (a['dateTime'] as DateTime).compareTo(b['dateTime'] as DateTime));
-  //   });
-  // }
-
-  // Future<void> _showTimePicker(int index) async {
-  //   await showDialog<TimeOfDay>(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       DateTime? dateTime = _drinksForSelectedDate[index]['dateTime'];
-
-  //       return AnalogClockDialog(
-  //         initialTime: dateTime ?? DateTime.now(),
-  //         onTimeSelected: (DateTime newTime) {
-  //           final box = Hive.box<Drink>('drinksBox');
-  //           final allDrinks = box.values.toList();
-  //           final currentDrink = _drinksForSelectedDate[index];
-
-  //           final drinkIndex = allDrinks.indexWhere((drink) =>
-  //               drink.dateTime == currentDrink['dateTime'] &&
-  //               drink.drinkType == currentDrink['type']);
-
-  //           if (drinkIndex != -1) {
-  //             final oldDrink = box.getAt(drinkIndex);
-  //             if (oldDrink != null) {
-  //               final originalDate = currentDrink['dateTime'] as DateTime;
-
-  //               final newDrink = Drink(
-  //                 dateTime: DateTime(
-  //                   originalDate.year,
-  //                   originalDate.month,
-  //                   originalDate.day,
-  //                   newTime.hour,
-  //                   newTime.minute,
-  //                 ),
-  //                 drinkType: oldDrink.drinkType,
-  //                 note: oldDrink.note,
-  //               );
-  //               print("New Drinkss: ${newDrink.dateTime}");
-  //               box.putAt(drinkIndex, newDrink);
-  //               _loadDrinksForDate(_selectedDate);
-  //             }
-  //           }
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
 
   String _calculateDrinksPerHour() {
     if (_drinksForSelectedDate.isEmpty) return '0.0';
