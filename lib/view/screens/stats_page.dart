@@ -94,7 +94,7 @@ class _StatsPageState extends State<StatsPage> {
           totalWine++;
         }
         // Adjust the date based on cutoff time
-        DateTime adjustedDate = _adjustDateByCutoff(drink.dateTime);
+        DateTime adjustedDate = adjustDateByCutoff(drink.dateTime);
         DateTime dateKey = DateTime(
           adjustedDate.year,
           adjustedDate.month,
@@ -152,6 +152,118 @@ class _StatsPageState extends State<StatsPage> {
       int maxStreak = 0;
       List<DateTime> dates = drinkDays.keys.toList()..sort();
 
+      DateTime now = DateTime.now();
+      int currentYear = now.year;
+
+      if (year == currentYear) {
+        // Current year calculation with inclusive dates
+        DateTime yearStart = DateTime(currentYear, 1, 1);
+        DateTime endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+        // Calculate total days including the current day
+        int daysElapsed = endDate.difference(yearStart).inDays;
+
+        // Count drink days with inclusive date range
+        int drinksInCurrentPeriod = drinkDays.keys
+            .where((date) => date.year == currentYear && !date.isAfter(endDate))
+            .length;
+
+        totalNonDrinkDays = daysElapsed - drinksInCurrentPeriod;
+      } else if (year != null) {
+        List<DateTime> yearDrinks = drinks
+            .where((drink) => drink.dateTime.year == year)
+            .map((drink) => drink.dateTime)
+            .toList()
+          ..sort();
+
+        if (yearDrinks.isNotEmpty) {
+          DateTime firstDrinkOfYear = yearDrinks.first;
+          // Set end time to last moment of the year
+          DateTime yearEnd = DateTime(year, 12, 31, 23, 59, 59);
+
+          // Inclusive day count
+          int totalDays = yearEnd.difference(firstDrinkOfYear).inDays;
+
+          int drinkDaysCount = drinkDays.keys
+              .where((date) =>
+                  date.year == year &&
+                  !date.isBefore(firstDrinkOfYear) &&
+                  !date.isAfter(yearEnd))
+              .length;
+
+          totalNonDrinkDays = totalDays - drinkDaysCount;
+        }
+      } // Longest Break calculation
+      if (year == null) {
+        // All Time view
+        // For drink days - use all dates in drinkDays
+        totalDrinkDays = drinkDays.length;
+
+        // For non-drink days - calculate from first ever drink to now
+        if (dates.isNotEmpty) {
+          DateTime firstEverDrink = dates.first;
+          DateTime now = DateTime.now();
+          int totalDays = now.difference(firstEverDrink).inDays;
+          totalNonDrinkDays = totalDays - totalDrinkDays;
+        }
+
+        // For longest streak - use all dates without year filtering
+        // (existing streak calculation logic remains unchanged)
+
+        // For longest break - calculate across all years
+        if (dates.isNotEmpty) {
+          longestBreak = 0;
+          int currentBreak = 0;
+
+          for (DateTime date = dates.first;
+              date.isBefore(DateTime.now().add(const Duration(days: 1)));
+              date = date.add(const Duration(days: 1))) {
+            String dateKey = "${date.year}-${date.month}-${date.day}";
+            if (!drinkDays.keys
+                .any((d) => "${d.year}-${d.month}-${d.day}" == dateKey)) {
+              currentBreak++;
+              if (currentBreak > longestBreak) {
+                longestBreak = currentBreak;
+              }
+            } else {
+              currentBreak = 0;
+            }
+          }
+        }
+      }
+      if (dates.isNotEmpty && year != null) {
+        longestBreak = 0;
+        List<DateTime> yearDates =
+            dates.where((date) => date.year == year).toList()..sort();
+
+        if (yearDates.isNotEmpty) {
+          DateTime startDate =
+              (year == currentYear) ? DateTime(year, 1, 1) : yearDates.first;
+          DateTime endDate =
+              (year == currentYear) ? now : DateTime(year, 12, 31);
+
+          Set<String> drinkDates = yearDates
+              .map((date) => "${date.year}-${date.month}-${date.day}")
+              .toSet();
+
+          int currentBreak = 0;
+          for (DateTime date = startDate;
+              date.isBefore(endDate.add(const Duration(days: 1)));
+              date = date.add(const Duration(days: 1))) {
+            String dateKey = "${date.year}-${date.month}-${date.day}";
+
+            if (!drinkDates.contains(dateKey)) {
+              currentBreak++;
+              if (currentBreak > longestBreak) {
+                longestBreak = currentBreak;
+              }
+            } else {
+              currentBreak = 0;
+            }
+          }
+        }
+      }
+
       for (int i = 0; i < dates.length; i++) {
         if (i > 0) {
           final difference = dates[i].difference(dates[i - 1]).inDays;
@@ -161,9 +273,6 @@ class _StatsPageState extends State<StatsPage> {
               maxStreak = currentStreak;
             }
           } else {
-            if (difference > longestBreak) {
-              longestBreak = difference - 1;
-            }
             currentStreak = 0;
           }
         }
@@ -171,16 +280,6 @@ class _StatsPageState extends State<StatsPage> {
 
       longestStreak = maxStreak + 1;
       totalDrinkDays = drinkDays.length;
-
-      if (year == DateTime.now().year || year == null) {
-        totalNonDrinkDays = DateTime.now().difference(firstDrinkDate!).inDays -
-            totalDrinkDays +
-            1;
-      } else {
-        totalNonDrinkDays =
-            (DateTime(year + 1).difference(DateTime(year)).inDays) -
-                totalDrinkDays;
-      }
     }
 
     setState(() {});
@@ -188,12 +287,14 @@ class _StatsPageState extends State<StatsPage> {
 
   String _calculateDaysAgo(DateTime date) {
     Duration difference = DateTime.now().difference(date);
-    if (difference.inDays == 0) {
+    int daysAgo = difference.inDays;
+
+    if (daysAgo == 0) {
       return 'Today';
-    } else if (difference.inDays == 1) {
+    } else if (daysAgo == 1) {
       return 'Yesterday';
     } else {
-      return '${difference.inDays} days ago';
+      return '$daysAgo days ago';
     }
   }
 
@@ -426,36 +527,4 @@ class _StatsPageState extends State<StatsPage> {
     print("Selected Year notifier: ${selectedStatsYearNotifier.value}");
     return yearsList;
   }
-}
-
-// Add these helper methods at the top of the class
-int getCutoffHour() {
-  String timeStr = selectedCutoffTimeGlobally;
-  List<String> timeParts = timeStr.split(':');
-  return int.parse(timeParts[0]);
-}
-
-int getCutoffMinutes() {
-  String timeStr = selectedCutoffTimeGlobally;
-  List<String> timeParts = timeStr.split(':');
-  String minuteStr = timeParts[1].split(' ')[0];
-  return int.parse(minuteStr);
-}
-
-DateTime _adjustDateByCutoff(DateTime drinkDate) {
-  int cutoffHour = getCutoffHour();
-  int cutoffMinutes = getCutoffMinutes();
-
-  DateTime cutoffTime = DateTime(
-    drinkDate.year,
-    drinkDate.month,
-    drinkDate.day,
-    cutoffHour,
-    cutoffMinutes,
-  );
-
-  if (drinkDate.isBefore(cutoffTime)) {
-    return drinkDate.subtract(const Duration(days: 1));
-  }
-  return drinkDate;
 }

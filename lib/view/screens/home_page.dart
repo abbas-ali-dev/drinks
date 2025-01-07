@@ -6,7 +6,6 @@ import 'package:drinks/models/drink_model.dart';
 import 'package:drinks/services/adMob.dart';
 import 'package:drinks/view/screens/monthly_page.dart';
 import 'package:drinks/view/screens/settings_page.dart';
-import 'package:drinks/view/screens/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_branch_sdk/flutter_branch_sdk.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -14,6 +13,9 @@ import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sizer/sizer.dart';
+import 'package:drinks/global/global_variable.dart';
+
+import 'stats_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

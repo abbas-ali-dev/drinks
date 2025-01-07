@@ -23,6 +23,8 @@ final isAllTimeViewNotifier = ValueNotifier<bool>(true);
 
 var showAdMobGlobally = ValueNotifier<bool>(true);
 
+final ValueNotifier<bool> isMenuOpenNotifier = ValueNotifier<bool>(false);
+
 Future checkConectivity() async {
   await Connectivity().checkConnectivity().then((result) {
     // Check first item in the list
@@ -36,4 +38,31 @@ Future checkConectivity() async {
   });
 }
 
-final ValueNotifier<bool> isMenuOpenNotifier = ValueNotifier<bool>(false);
+// Add these helper methods at the top of the class
+int getCutoffHour() {
+  String timeStr = selectedCutoffTimeGlobally;
+  List<String> timeParts = timeStr.split(':');
+  return int.parse(timeParts[0]);
+}
+
+int getCutoffMinutes() {
+  String timeStr = selectedCutoffTimeGlobally;
+  List<String> timeParts = timeStr.split(':');
+  String minuteStr = timeParts[1].split(' ')[0];
+  return int.parse(minuteStr);
+}
+
+DateTime adjustDateByCutoff(DateTime drinkDate) {
+  int cutoffHour = getCutoffHour();
+  int cutoffMinutes = getCutoffMinutes();
+  DateTime cutoffTime = DateTime(
+    drinkDate.year,
+    drinkDate.month,
+    drinkDate.day,
+    cutoffHour,
+    cutoffMinutes,
+  );
+  return drinkDate.isBefore(cutoffTime)
+      ? drinkDate.subtract(const Duration(days: 1))
+      : drinkDate;
+}
