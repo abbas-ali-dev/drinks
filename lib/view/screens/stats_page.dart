@@ -63,18 +63,43 @@ class _StatsPageState extends State<StatsPage> {
     earliestDrinkTime = null;
     latestDrinkTime = null;
 
+    Map<DateTime, bool> drinkDays = {};
+
     final drinks = _drinksBox.values.where((drink) {
       if (year == null) return true;
       return drink.dateTime.year == year;
     }).toList();
 
+    print("Number of drinks found: ${drinks.length}");
+    print("Selected year: $year");
+
     drinks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
+    DateTime now = DateTime.now();
+    int currentYear = now.year;
+
+    // Place this before if (drinks.isNotEmpty)
+    if (year == currentYear) {
+      DateTime yearStart = DateTime(currentYear, 1, 1);
+      DateTime today = DateTime.now();
+
+      // Calculate total days from Jan 1st to today (inclusive)
+      int totalDaysInYear = today.difference(yearStart).inDays;
+
+      // Count drink days in current year
+      int drinksInCurrentYear =
+          drinkDays.keys.where((date) => date.year == currentYear).length;
+
+      // Non-drink days = Total days - Drink days
+      totalNonDrinkDays = totalDaysInYear - drinksInCurrentYear;
+      print('Total non-drink days:0 $totalNonDrinkDays');
+    }
 
     if (drinks.isNotEmpty) {
       firstDrinkDate = drinks.first.dateTime;
       lastDrinkDate = drinks.last.dateTime;
 
-      Map<DateTime, bool> drinkDays = {};
+      // Map<DateTime, bool> drinkDays = {};
 
       int cutoffHour = getCutoffHour();
       int cutoffMinutes = getCutoffMinutes();
@@ -152,24 +177,16 @@ class _StatsPageState extends State<StatsPage> {
       int maxStreak = 0;
       List<DateTime> dates = drinkDays.keys.toList()..sort();
 
-      DateTime now = DateTime.now();
-      int currentYear = now.year;
+      // DateTime now = DateTime.now();
+      // int currentYear = now.year;
 
+      // Replace the current year calculation block with this:
       if (year == currentYear) {
-        // Current year calculation with inclusive dates
-        DateTime yearStart = DateTime(currentYear, 1, 1);
-        DateTime endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        List<DateTime> previousYearDrinks = _drinksBox.values
+            .where((drink) => drink.dateTime.year == year! - 1)
+            .map((drink) => drink.dateTime)
+            .toList();
 
-        // Calculate total days including the current day
-        int daysElapsed = endDate.difference(yearStart).inDays;
-
-        // Count drink days with inclusive date range
-        int drinksInCurrentPeriod = drinkDays.keys
-            .where((date) => date.year == currentYear && !date.isAfter(endDate))
-            .length;
-
-        totalNonDrinkDays = daysElapsed - drinksInCurrentPeriod;
-      } else if (year != null) {
         List<DateTime> yearDrinks = drinks
             .where((drink) => drink.dateTime.year == year)
             .map((drink) => drink.dateTime)
@@ -177,21 +194,86 @@ class _StatsPageState extends State<StatsPage> {
           ..sort();
 
         if (yearDrinks.isNotEmpty) {
-          DateTime firstDrinkOfYear = yearDrinks.first;
-          // Set end time to last moment of the year
-          DateTime yearEnd = DateTime(year, 12, 31, 23, 59, 59);
+          DateTime startDate;
+          if (previousYearDrinks.isNotEmpty) {
+            startDate = DateTime(year!, 1, 1);
+            // Add +1 only when we have previous year drinks
+            int totalDaysInYear = DateTime.now()
+                    .subtract(const Duration(days: 1))
+                    .difference(startDate)
+                    .inDays +
+                1;
 
-          // Inclusive day count
-          int totalDays = yearEnd.difference(firstDrinkOfYear).inDays;
+            int drinksInCurrentYear = drinkDays.keys
+                .where((date) =>
+                    date.year == currentYear &&
+                    !date.isBefore(startDate) &&
+                    date.isBefore(DateTime.now()))
+                .length;
 
+            totalNonDrinkDays = totalDaysInYear - drinksInCurrentYear;
+          } else {
+            startDate = yearDrinks.first;
+            int totalDaysInYear = DateTime.now()
+                .subtract(const Duration(days: 1))
+                .difference(startDate)
+                .inDays;
+
+            int drinksInCurrentYear = drinkDays.keys
+                .where((date) =>
+                    date.year == currentYear &&
+                    !date.isBefore(startDate) &&
+                    date.isBefore(DateTime.now()))
+                .length;
+
+            totalNonDrinkDays = totalDaysInYear - drinksInCurrentYear;
+          }
+        }
+      } else if (year != null) {
+        // Get all drinks for the selected year
+        List<DateTime> yearDrinks = _drinksBox.values
+            .where((drink) => drink.dateTime.year == year)
+            .map((drink) => drink.dateTime)
+            .toList()
+          ..sort();
+
+        // Get all drinks for the previous year
+        List<DateTime> previousYearDrinks = _drinksBox.values
+            .where((drink) => drink.dateTime.year == year - 1)
+            .map((drink) => drink.dateTime)
+            .toList();
+
+        if (yearDrinks.isNotEmpty) {
+          DateTime startDate;
+          if (previousYearDrinks.isNotEmpty) {
+            // If there are drinks in the previous year, start from January 1st
+            startDate = DateTime(year, 1, 1);
+          } else {
+            // If no drinks in previous year, start from first drink date
+            startDate = yearDrinks.first;
+          }
+
+          DateTime endDate = DateTime(year, 12, 31);
+
+          // Calculate total days in the period
+          int totalDays = endDate.difference(startDate).inDays + 1;
+
+          // Count actual drink days in this period
           int drinkDaysCount = drinkDays.keys
               .where((date) =>
                   date.year == year &&
-                  !date.isBefore(firstDrinkOfYear) &&
-                  !date.isAfter(yearEnd))
+                  !date.isBefore(startDate) &&
+                  !date.isAfter(endDate))
               .length;
 
           totalNonDrinkDays = totalDays - drinkDaysCount;
+
+          print('Year: $year');
+          print('Start Date: $startDate');
+          print('End Date: $endDate');
+          print('Total Days: $totalDays');
+          print('Drink Days: $drinkDaysCount');
+          print('Non-Drink Days: $totalNonDrinkDays');
         }
       } // Longest Break calculation
       if (year == null) {
