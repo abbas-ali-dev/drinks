@@ -214,10 +214,7 @@ class _StatsPageState extends State<StatsPage> {
             totalNonDrinkDays = totalDaysInYear - drinksInCurrentYear;
           } else {
             startDate = yearDrinks.first;
-            int totalDaysInYear = DateTime.now()
-                .subtract(const Duration(days: 1))
-                .difference(startDate)
-                .inDays;
+            int totalDaysInYear = DateTime.now().difference(startDate).inDays;
 
             int drinksInCurrentYear = drinkDays.keys
                 .where((date) =>
@@ -368,7 +365,17 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   String _calculateDaysAgo(DateTime date) {
-    Duration difference = DateTime.now().difference(date);
+    DateTime now = DateTime.now();
+    int currentHour = now.hour;
+
+    // Add extra day if time is between 6 AM and 6 PM
+    Duration difference;
+    if (currentHour >= 6 && currentHour < 18) {
+      difference = now.add(const Duration(days: 1)).difference(date);
+    } else {
+      difference = now.difference(date);
+    }
+
     int daysAgo = difference.inDays;
 
     if (daysAgo == 0) {
