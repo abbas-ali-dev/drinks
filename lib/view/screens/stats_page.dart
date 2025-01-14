@@ -46,6 +46,7 @@ class _StatsPageState extends State<StatsPage> {
     _drinksBox = Hive.box<Drink>('drinksBox');
     _calculateStats(null); // Start with all-time stats
     selectedStatsYearNotifier.value = DateTime.now().year;
+    _logYearWiseStats(); // Add this line
   }
 
   void _calculateStats(int? year) {
@@ -615,5 +616,34 @@ class _StatsPageState extends State<StatsPage> {
 
     print("Selected Year notifier: ${selectedStatsYearNotifier.value}");
     return yearsList;
+  }
+
+  void _logYearWiseStats() {
+    List<int> years = _getAvailableYears();
+
+    print('\n=== YEAR-WISE STATISTICS ===');
+
+    // Log All-Time stats first
+    _calculateStats(null);
+    print('\nALL TIME STATS:');
+    print('Total Drinks: $totalDrinks');
+    print('Longest Streak: $longestStreak days');
+    print('Longest Break: $longestBreak days');
+    print('Total Drink Days: $totalDrinkDays');
+    print('Total Non-Drink Days: $totalNonDrinkDays');
+
+    // Log individual year stats
+    for (int year in years) {
+      _calculateStats(year);
+      print('\nYEAR $year STATS:');
+      print('Total Drinks: $totalDrinks');
+      print('Longest Streak: $longestStreak days');
+      print('Longest Break: $longestBreak days');
+      print('Total Drink Days: $totalDrinkDays');
+      print('Total Non-Drink Days: $totalNonDrinkDays');
+    }
+
+    // Reset to current view
+    _calculateStats(isAllTimeViewNotifier.value ? null : selectedYear);
   }
 }
