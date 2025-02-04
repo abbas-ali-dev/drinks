@@ -142,12 +142,13 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
                 ),
                 onPressed: () {
                   if (isOpen) {
-                    Navigator.push(
+                    Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const MonthlyPage(),
                         settings: const RouteSettings(name: 'MonthlyPage'),
                       ),
+                      (route) => false,
                     );
                     setState(() {
                       isMenuOpenNotifier.value = false;
@@ -174,12 +175,13 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
                       ),
                 onPressed: () {
                   if (isOpen) {
-                    Navigator.push(
+                    Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const SettingsPage(),
                         settings: const RouteSettings(name: 'SettingsPage'),
                       ),
+                      (route) => false,
                     );
                     setState(() {
                       isMenuOpenNotifier.value = false;
@@ -213,15 +215,18 @@ class _CustomBottumNavigationBarState extends State<CustomBottumNavigationBar> {
                       ),
                 onPressed: () {
                   if (isOpen) {
-                    Navigator.pushAndRemoveUntil(
+                    Navigator.pushReplacement(
+                      // ignore: use_build_context_synchronously
                       context,
                       MaterialPageRoute(
                         builder: (context) => const StatsPage(),
                         settings: const RouteSettings(name: 'StatsPage'),
                       ),
-                      (route) => false,
+                      // (route) => false,
                     );
+
                     setState(() {
+                      isAllTimeViewNotifier.value = true;
                       isMenuOpenNotifier.value = false;
                     });
                   } else {

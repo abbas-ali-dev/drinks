@@ -38,6 +38,7 @@ class _StatsPageState extends State<StatsPage> {
   void initState() {
     super.initState();
     checkConectivity();
+    isAllTimeViewNotifier.value = true;
     if (showAdMobGlobally.value == true) {
       _bannerAd = AdHelper.createBannerAd(() {
         setState(() {});
