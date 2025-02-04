@@ -29,6 +29,7 @@ class _StatsPageState extends State<StatsPage> {
   DateTime? firstDrinkDate;
   int longestStreak = 0;
   int longestBreak = 0;
+  // int longestBreakss = 0;
   int totalDrinkDays = 0;
   int totalNonDrinkDays = 0;
   DateTime? earliestDrinkTime;
@@ -60,6 +61,7 @@ class _StatsPageState extends State<StatsPage> {
     firstDrinkDate = null;
     longestStreak = 0;
     longestBreak = 0;
+
     totalDrinkDays = 0;
     totalNonDrinkDays = 0;
     earliestDrinkTime = null;
@@ -79,6 +81,15 @@ class _StatsPageState extends State<StatsPage> {
 
     DateTime now = DateTime.now();
     int currentYear = now.year;
+
+    // Add the new condition for longestBreak
+    if (year == currentYear && drinks.isEmpty) {
+      DateTime startDate = DateTime(currentYear, 1, 1);
+      longestBreak = now.difference(startDate).inDays;
+    } else if (year == currentYear && drinks.isNotEmpty) {
+      longestBreak = longestBreak;
+      print('breakss: $longestBreak');
+    }
 
     // Place this before if (drinks.isNotEmpty)
     if (year == currentYear) {
@@ -342,6 +353,38 @@ class _StatsPageState extends State<StatsPage> {
               currentBreak = 0;
             }
           }
+        }
+      }
+
+      // for All Time
+      if (year == null) {
+        setState(() {
+          if (longestBreak >= 2) {
+            longestBreak = longestBreak - 2;
+            print('Temp longest breakss: $longestBreak');
+          }
+        });
+      }
+      if (year != null && year == currentYear) {
+        List<DateTime> previousYearDrinks = _drinksBox.values
+            .where((drink) => drink.dateTime.year == year - 1)
+            .map((drink) => drink.dateTime)
+            .toList();
+        if (previousYearDrinks.isEmpty) {
+          setState(() {
+            if (longestBreak >= 2) {
+              longestBreak = longestBreak - 2;
+              print('Temp longest breakss: $longestBreak');
+            }
+          });
+        }
+        if (previousYearDrinks.isNotEmpty) {
+          setState(() {
+            if (longestBreak >= 2) {
+              longestBreak = longestBreak - 2;
+              print('Temp longest breakss: $longestBreak');
+            }
+          });
         }
       }
 
