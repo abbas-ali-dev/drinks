@@ -29,7 +29,6 @@ class _StatsPageState extends State<StatsPage> {
   DateTime? firstDrinkDate;
   int longestStreak = 0;
   int longestBreak = 0;
-  // int longestBreakss = 0;
   int totalDrinkDays = 0;
   int totalNonDrinkDays = 0;
   DateTime? earliestDrinkTime;
@@ -404,6 +403,60 @@ class _StatsPageState extends State<StatsPage> {
 
       longestStreak = maxStreak + 1;
       totalDrinkDays = drinkDays.length;
+    }
+    // agr drinks khali hn to totalNonDrinkDays or longestBreak ki value ko zero kr rha h
+    if (drinks.isEmpty) {
+      List<DateTime> previousYearDrinks = _drinksBox.values
+          .where((drink) => drink.dateTime.year == year! - 1)
+          .map((drink) => drink.dateTime)
+          .toList();
+
+      List<DateTime> currentYearDrinks = _drinksBox.values
+          .where((drink) => drink.dateTime.year == year)
+          .map((drink) => drink.dateTime)
+          .toList();
+
+      if (previousYearDrinks.isEmpty && currentYearDrinks.isEmpty) {
+        totalNonDrinkDays = 0;
+        longestBreak = 0;
+        // return;
+      }
+    }
+    // agr 12PM sa 12PM tak khali hn to totalNonDrinkDays ko minus kr rha h
+    if (year == DateTime.now().year) {
+      List<DateTime> previousYearDrinks = _drinksBox.values
+          .where((drink) => drink.dateTime.year == year! - 1)
+          .map((drink) => drink.dateTime)
+          .toList();
+
+      DateTime now = DateTime.now();
+      int currentHour = now.hour;
+
+      if (previousYearDrinks.isEmpty &&
+          currentHour >= 12 &&
+          currentHour <= 23) {
+        totalNonDrinkDays = totalNonDrinkDays - 1;
+      }
+    }
+// agr pahli drink mera current date ma add h to longestBreak ko zero kr rha h
+    if (year == null || year == DateTime.now().year) {
+      List<DateTime> previousYearDrinks = _drinksBox.values
+          .where((drink) => drink.dateTime.year == DateTime.now().year - 1)
+          .map((drink) => drink.dateTime)
+          .toList();
+
+      List<DateTime> currentYearDrinks = _drinksBox.values
+          .where((drink) => drink.dateTime.year == DateTime.now().year)
+          .map((drink) => drink.dateTime)
+          .toList()
+        ..sort();
+
+      if (previousYearDrinks.isEmpty &&
+          currentYearDrinks.isNotEmpty &&
+          DateFormat('yyyy-MM-dd').format(currentYearDrinks.first) ==
+              DateFormat('yyyy-MM-dd').format(DateTime.now())) {
+        longestBreak = 0;
+      }
     }
 
     setState(() {});
