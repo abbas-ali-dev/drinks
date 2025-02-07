@@ -458,14 +458,26 @@ class _StatsPageState extends State<StatsPage> {
         longestBreak = 0;
       }
     }
-    // if (year == DateTime.now().year && totalNonDrinkDays > 0) {
-    //   totalNonDrinkDays = totalNonDrinkDays + 1;
-    //   longestBreak = longestBreak + 2;
-    // }
-    // if (year == null && totalNonDrinkDays > 0) {
-    //   totalNonDrinkDays = totalNonDrinkDays + 1;
-    //   longestBreak = longestBreak + 2;
-    // }
+
+    // agr mera current date ma koi b drink add h to 'totalNonDrinkDays' ko +1 kr rha h
+    if (year == null || year == DateTime.now().year) {
+      List<DateTime> previousYearDrinks = _drinksBox.values
+          .where((drink) => drink.dateTime.year == DateTime.now().year - 1)
+          .map((drink) => drink.dateTime)
+          .toList();
+
+      List<DateTime> currentDateDrinks = _drinksBox.values
+          .where((drink) =>
+              DateFormat('yyyy-MM-dd').format(drink.dateTime) ==
+              DateFormat('yyyy-MM-dd').format(DateTime.now()))
+          .map((drink) => drink.dateTime)
+          .toList();
+
+      if (previousYearDrinks.isNotEmpty && currentDateDrinks.isNotEmpty) {
+        totalNonDrinkDays = totalNonDrinkDays + 1;
+        longestBreak = longestBreak + 2;
+      }
+    }
 
     setState(() {});
   }
