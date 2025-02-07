@@ -479,7 +479,7 @@ class MonthlyPageState extends State<MonthlyPage> {
                   shrinkWrap: true,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 7,
-                    childAspectRatio: 2,
+                    childAspectRatio: 1.5,
                   ),
                   itemBuilder: (context, dayIndex) {
                     // Apply the offset to align days correctly

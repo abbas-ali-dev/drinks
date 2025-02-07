@@ -458,6 +458,14 @@ class _StatsPageState extends State<StatsPage> {
         longestBreak = 0;
       }
     }
+    // if (year == DateTime.now().year && totalNonDrinkDays > 0) {
+    //   totalNonDrinkDays = totalNonDrinkDays + 1;
+    //   longestBreak = longestBreak + 2;
+    // }
+    // if (year == null && totalNonDrinkDays > 0) {
+    //   totalNonDrinkDays = totalNonDrinkDays + 1;
+    //   longestBreak = longestBreak + 2;
+    // }
 
     setState(() {});
   }
